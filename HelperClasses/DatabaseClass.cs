@@ -11,24 +11,37 @@ namespace MarsAddIn.HelperClasses
     internal static class DatabaseClass
     {
 
-        public static List<DatabaseObject> GetDatabaseObjects(string serverName, string databaseName = "", string tableName = "", bool includeView = false)
+        public static List<DatabaseObject> GetDatabaseObjects(
+          string serverName,
+          string databaseName = "",
+          string tableName = "",
+          bool includeView = false)
         {
-            var cnn = ConnectDb(serverName);
-
+            SqlConnection conn = ConnectDb(serverName);
             string query;
             if (tableName != "")
-                query = $"SELECT COLUMN_NAME[ColumnName], DATA_TYPE[DataType], ISNULL(CHARACTER_MAXIMUM_LENGTH, 0) [Length], clmns.is_identity [IsIdentity] FROM[{databaseName}].[INFORMATION_SCHEMA].[COLUMNS] INNER JOIN [{databaseName}].[sys].[tables] tbl ON tbl.[name] = TABLE_NAME INNER JOIN [{databaseName}].[sys].[columns] clmns ON clmns.[object_id] = tbl.[object_id] AND clmns.[name] = COLUMN_NAME WHERE TABLE_NAME = '{tableName}' ORDER BY ORDINAL_POSITION ASC;";
+            {
+                string str1 = tableName;
+                if (tableName.IndexOf(".") > 0)
+                    str1 = tableName.Substring(tableName.IndexOf(".") + 1).Replace("[", "").Replace("]", "");
+                string str2 = "dbo";
+                if (tableName.IndexOf(".") > 0)
+                    str2 = tableName.Substring(1, tableName.IndexOf(".") - 1).Replace("[", "").Replace("]", "");
+                query = "SELECT COLUMN_NAME[ColumnName], DATA_TYPE[DataType], ISNULL(CHARACTER_MAXIMUM_LENGTH, 0) [Length], clmns.is_identity [IsIdentity] FROM[" + databaseName + "].[INFORMATION_SCHEMA].[COLUMNS] INNER JOIN [" + databaseName + "].[sys].[tables] tbl ON tbl.[name] = TABLE_NAME INNER JOIN [" + databaseName + "].[sys].[columns] clmns ON clmns.[object_id] = tbl.[object_id] AND clmns.[name] = COLUMN_NAME WHERE TABLE_NAME = '" + str1 + "' AND TABLE_SCHEMA = '" + str2 + "' ORDER BY ORDINAL_POSITION ASC;";
+            }
             else if (databaseName != "")
             {
                 AzObject.DatabaseName = databaseName;
-                query = includeView
-                    ? $"SELECT [TableName] FROM (SELECT [name] [TableName], 0 [ObjOrder] FROM [{databaseName}].[sys].[tables] UNION ALL SELECT [name] [TableName], 1 [ObjOrder] FROM [{databaseName}].[sys].[views] ) _q1 ORDER BY _q1.ObjOrder ASC, _q1.[TableName] ASC;"
-                    : $"SELECT [TableName] FROM (SELECT [name] [TableName], 0 [ObjOrder] FROM [{databaseName}].[sys].[tables] ) _q1 ORDER BY _q1.ObjOrder ASC, _q1.[TableName] ASC;";
+                string str;
+                if (!includeView)
+                    str = "SELECT [TableName] FROM (SELECT  CONCAT('[', schm.[name], '].[',  tbl.[name], ']') [TableName], 0 [ObjOrder] FROM [" + databaseName + "].[sys].[tables] tbl INNER JOIN  [" + databaseName + "].[sys].[schemas] schm ON schm.[schema_id] = tbl.[schema_id] ) _q1 ORDER BY _q1.ObjOrder ASC, _q1.[TableName] ASC;";
+                else
+                    str = "SELECT [TableName] FROM (SELECT  CONCAT('[', schm.[name], '].[',  tbl.[name], ']') [TableName], 0 [ObjOrder] FROM [" + databaseName + "].[sys].[tables] tbl INNER JOIN  [" + databaseName + "].[sys].[schemas] schm ON schm.[schema_id] = tbl.[schema_id]  UNION ALL SELECT  CONCAT('[', schm.[name], '].[',  vws.[name], ']') [TableName], 1 [ObjOrder] FROM [" + databaseName + "].[sys].[views] vws INNER JOIN  [" + databaseName + "].[sys].[schemas] schm ON schm.[schema_id] = vws.[schema_id] ) _q1 ORDER BY _q1.ObjOrder ASC, _q1.[TableName] ASC;";
+                query = str;
             }
             else
-                query = @"SELECT [name] [DatabaseName] FROM [sys].[databases] WHERE [name] NOT IN ('master', 'tempdb', 'model', 'msdb', 'SSISDB') ORDER BY [name] ASC;";
-
-            return cnn != null ? QueryDatabase(cnn, query) : new List<DatabaseObject>();
+                query = "SELECT [name] [DatabaseName] FROM [sys].[databases] WHERE [name] NOT IN ('master', 'tempdb', 'model', 'msdb', 'SSISDB') ORDER BY [name] ASC;";
+            return conn == null ? new List<DatabaseObject>() : DatabaseClass.QueryDatabase(conn, query);
         }
 
         private static SqlConnection ConnectDb(string serverName, string databaseName = "master")
@@ -270,6 +283,8 @@ namespace MarsAddIn.HelperClasses
                 WriteRows = 0
             };
 
+           
+
             if (query != "")
                 ExecuteOnDatabase(conn, query);
 
@@ -337,11 +352,12 @@ namespace MarsAddIn.HelperClasses
                 dt.Rows.Add(row);
             }
 
-            var bc = new SqlBulkCopy(conn.ConnectionString, SqlBulkCopyOptions.TableLock)
+            var bc = new SqlBulkCopy(conn.ConnectionString, SqlBulkCopyOptions.TableLock | SqlBulkCopyOptions.FireTriggers)
             {
                 DestinationTableName = table.ToString(),
                 BatchSize = dt.Rows.Count,
             };
+    
 
             foreach (DataColumn dataColumn in dt.Columns)
                 bc.ColumnMappings.Add(dataColumn.ColumnName, dataColumn.ColumnName);

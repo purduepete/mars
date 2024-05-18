@@ -563,7 +563,7 @@ namespace MarsAddIn.Forms
             var query = "";
 
             if (cBoxTrunc.Checked)
-                query = $"TRUNCATE TABLE [{comboDatabase.SelectedItem}]..[{comboTable.SelectedItem}]";
+                query = string.Format("TRUNCATE TABLE [{0}].{1}", comboDatabase.SelectedItem, comboTable.SelectedItem);
 
             return query;
         }
