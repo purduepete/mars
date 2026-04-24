@@ -10,6 +10,8 @@ namespace MarsAddIn.HelperClasses
 {
     internal static class DatabaseClass
     {
+        private const int MaxExcelRows = 1048576;
+        private const int MaxVarcharLength = 64 * 1024;
 
         public static List<DatabaseObject> GetDatabaseObjects(
           string serverName,
@@ -65,6 +67,7 @@ namespace MarsAddIn.HelperClasses
             }
             catch (Exception ex)
             {
+                cnn.Dispose();
                 var message = ex.Message;
                 var inner = ex.InnerException;
                 while (inner != null)
@@ -81,32 +84,50 @@ namespace MarsAddIn.HelperClasses
         {
             var dbList = new List<DatabaseObject>();
 
-            var cmd = new SqlCommand
+            using (var cmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = conn })
             {
-                CommandText = query,
-                CommandType = CommandType.Text,
-                Connection = conn
-            };
-
-
-            SqlDataReader reader;
-            try
-            {
-                reader = cmd.ExecuteReader();
-            }
-            catch (Exception)
-            {
-                cmd = new SqlCommand
+                SqlDataReader reader;
+                try
                 {
-                    CommandText = query,
-                    CommandType = CommandType.Text,
-                    Connection = ConnectDb(AzObject.ServerName, AzObject.DatabaseName)
-                };
+                    reader = cmd.ExecuteReader();
+                }
+                catch (Exception)
+                {
+                    var retryConn = ConnectDb(AzObject.ServerName, AzObject.DatabaseName);
+                    if (retryConn == null) return dbList;
 
-                reader = cmd.ExecuteReader();
+                    using (var retryCmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = retryConn })
+                    {
+                        try
+                        {
+                            reader = retryCmd.ExecuteReader();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Database Query Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            retryConn.Close();
+                            return dbList;
+                        }
+
+                        ReadDatabaseObjects(reader, query, dbList);
+                        reader.Close();
+                        retryConn.Close();
+                        return dbList;
+                    }
+                }
+
+                ReadDatabaseObjects(reader, query, dbList);
+                reader.Close();
             }
 
+            conn.Close();
+            return dbList;
+        }
+
+        private static void ReadDatabaseObjects(SqlDataReader reader, string query, List<DatabaseObject> dbList)
+        {
             while (reader.Read())
+            {
                 if (query.Contains("DatabaseName"))
                     dbList.Add(new DatabaseObject { DatabaseName = reader[0].ToString() });
                 else if (query.Contains("TableName"))
@@ -117,66 +138,44 @@ namespace MarsAddIn.HelperClasses
                     var length = (int)reader[2];
 
                     if (dataType.Contains("varchar") && length == -1)
-                        length = 64 * 1024;
+                        length = MaxVarcharLength;
 
                     dbList.Add(new DatabaseObject { ColumnName = reader[0].ToString(), DataType = dataType, ColumnLength = length, IsIdentity = (bool)reader[3] });
                 }
-
-
-            reader.Close();
-            cmd.Connection.Close();
-
-            return dbList;
+            }
         }
 
 
         private static bool ExecuteOnDatabase(SqlConnection conn, string query)
         {
-            bool result;
-            var cmd = new SqlCommand
-            {
-                CommandText = query,
-                CommandType = CommandType.Text,
-                Connection = conn
-            };
-
             try
             {
-                cmd.ExecuteNonQuery();
-                result = true;
+                using (var cmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = conn })
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                result = false;
+                MessageBox.Show(ex.Message, "Database Execute Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
-
-            conn.Close();
-            return result;
+            finally
+            {
+                conn.Close();
+            }
         }
 
 
         public static string[] GetDatabases(List<DatabaseObject> dbobjs)
         {
-            if (dbobjs.Count == 0)
-                return new string[0];
-
-            var dbarray = new string[dbobjs.Count];
-            for (var i = 0; i < dbobjs.Count; i++)
-                dbarray[i] = dbobjs[i].DatabaseName;
-
-            return dbarray;
+            return dbobjs.Select(x => x.DatabaseName).ToArray();
         }
 
         public static string[] GetTables(List<DatabaseObject> dbobjs)
         {
-            if (dbobjs.Count == 0)
-                return new string[0];
-
-            var dbarray = new string[dbobjs.Count];
-            for (var i = 0; i < dbobjs.Count; i++)
-                dbarray[i] = dbobjs[i].TableName;
-
-            return dbarray;
+            return dbobjs.Select(x => x.TableName).ToArray();
         }
 
         public static List<string> GetExcelColumns(List<string> headerList, bool withHeader = true)
@@ -222,42 +221,57 @@ namespace MarsAddIn.HelperClasses
 
             if (conn == null || query == null) return;
 
-            var cmd = new SqlCommand
+            SqlConnection activeConn = conn;
+            using (var cmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = conn })
             {
-                CommandText = query,
-                CommandType = CommandType.Text,
-                Connection = conn
-            };
-
-            SqlDataReader reader;
-            try
-            {
-                reader = cmd.ExecuteReader();
-            }
-            catch (Exception)
-            {
-                cmd = new SqlCommand
+                SqlDataReader reader;
+                try
                 {
-                    CommandText = query,
-                    CommandType = CommandType.Text,
-                    Connection = ConnectDb(AzObject.ServerName, AzObject.DatabaseName)
-                };
+                    reader = cmd.ExecuteReader();
+                }
+                catch (Exception)
+                {
+                    activeConn = ConnectDb(AzObject.ServerName, AzObject.DatabaseName);
+                    if (activeConn == null) return;
 
-                reader = cmd.ExecuteReader();
+                    using (var retryCmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = activeConn })
+                    {
+                        try
+                        {
+                            reader = retryCmd.ExecuteReader();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Database Read Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            activeConn.Close();
+                            return;
+                        }
+
+                        WriteReaderToRange(reader, startRng, customQuery);
+                        reader.Close();
+                        activeConn.Close();
+                        return;
+                    }
+                }
+
+                WriteReaderToRange(reader, startRng, customQuery);
+                reader.Close();
             }
+
+            activeConn.Close();
+        }
+
+        private static void WriteReaderToRange(SqlDataReader reader, Excel.Range startRng, bool customQuery)
+        {
             if (customQuery)
             {
-                var j = 0;
                 var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
-                foreach (var column in columns)
-                {
-                    startRng.Offset[-1, j].Value = column;
-                    j++;
-                }
+                for (var j = 0; j < columns.Count; j++)
+                    startRng.Offset[-1, j].Value = columns[j];
             }
 
             var i = 0;
-            while (reader.Read() && i < 1048576)
+            while (reader.Read() && i < MaxExcelRows)
             {
                 for (var j = 0; j < reader.FieldCount; j++)
                 {
@@ -273,9 +287,6 @@ namespace MarsAddIn.HelperClasses
 
                 i++;
             }
-
-            reader.Close();
-            cmd.Connection.Close();
         }
 
         public static WriteResultsObject WriteData(object server, object database, object table, string query,
@@ -325,29 +336,41 @@ namespace MarsAddIn.HelperClasses
 
                     if (currentValue != null && !rslt.BadTypeColumns.Contains(j - 1))
                     {
+                        var strVal = currentValue.ToString();
+                        var isValid = true;
+
                         switch (dataType)
                         {
                             case "int":
-                                try
-                                {
-                                    var intVal = Convert.ToInt32(currentValue);
-                                }
-                                catch (Exception)
-                                {
-                                    rslt.BadTypeColumns.Add(j - 1);
-                                }
+                                isValid = int.TryParse(strVal, out _);
+                                break;
+                            case "bigint":
+                                isValid = long.TryParse(strVal, out _);
+                                break;
+                            case "decimal":
+                            case "numeric":
+                            case "money":
+                            case "smallmoney":
+                                isValid = decimal.TryParse(strVal, out _);
+                                break;
+                            case "float":
+                            case "real":
+                                isValid = double.TryParse(strVal, out _);
+                                break;
+                            case "bit":
+                                isValid = strVal == "0" || strVal == "1" || 
+                                          bool.TryParse(strVal, out _);
                                 break;
                             case "datetime":
-                                try
-                                {
-                                    var intVal = Convert.ToDateTime(currentValue);
-                                }
-                                catch (Exception)
-                                {
-                                    rslt.BadTypeColumns.Add(j - 1);
-                                }
+                            case "datetime2":
+                            case "date":
+                            case "smalldatetime":
+                                isValid = DateTime.TryParse(strVal, out _);
                                 break;
                         }
+
+                        if (!isValid)
+                            rslt.BadTypeColumns.Add(j - 1);
                     }
 
 
