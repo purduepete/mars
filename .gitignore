@@ -1,0 +1,12 @@
+# Build output
+bin/
+obj/
+
+# NuGet
+packages/
+nuget.exe
+
+# User-specific files
+*.user
+*.suo
+*.pfx

@@ -1,6 +1,7 @@
 <Project>
-  <!-- Prevent dotnet restore from running on this legacy packages.config project -->
+  <!-- Prevent SDK-style NuGet restore on this legacy packages.config VSTO project -->
   <PropertyGroup>
     <RestoreProjectStyle>PackagesConfig</RestoreProjectStyle>
+    <ResolveNuGetPackages>false</ResolveNuGetPackages>
   </PropertyGroup>
 </Project>
