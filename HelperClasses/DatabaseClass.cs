@@ -82,32 +82,50 @@ namespace MarsAddIn.HelperClasses
         {
             var dbList = new List<DatabaseObject>();
 
-            var cmd = new SqlCommand
+            using (var cmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = conn })
             {
-                CommandText = query,
-                CommandType = CommandType.Text,
-                Connection = conn
-            };
-
-
-            SqlDataReader reader;
-            try
-            {
-                reader = cmd.ExecuteReader();
-            }
-            catch (Exception)
-            {
-                cmd = new SqlCommand
+                SqlDataReader reader;
+                try
                 {
-                    CommandText = query,
-                    CommandType = CommandType.Text,
-                    Connection = ConnectDb(AzObject.ServerName, AzObject.DatabaseName)
-                };
+                    reader = cmd.ExecuteReader();
+                }
+                catch (Exception)
+                {
+                    var retryConn = ConnectDb(AzObject.ServerName, AzObject.DatabaseName);
+                    if (retryConn == null) return dbList;
 
-                reader = cmd.ExecuteReader();
+                    using (var retryCmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = retryConn })
+                    {
+                        try
+                        {
+                            reader = retryCmd.ExecuteReader();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Database Query Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            retryConn.Close();
+                            return dbList;
+                        }
+
+                        ReadDatabaseObjects(reader, query, dbList);
+                        reader.Close();
+                        retryConn.Close();
+                        return dbList;
+                    }
+                }
+
+                ReadDatabaseObjects(reader, query, dbList);
+                reader.Close();
             }
 
+            conn.Close();
+            return dbList;
+        }
+
+        private static void ReadDatabaseObjects(SqlDataReader reader, string query, List<DatabaseObject> dbList)
+        {
             while (reader.Read())
+            {
                 if (query.Contains("DatabaseName"))
                     dbList.Add(new DatabaseObject { DatabaseName = reader[0].ToString() });
                 else if (query.Contains("TableName"))
@@ -122,12 +140,7 @@ namespace MarsAddIn.HelperClasses
 
                     dbList.Add(new DatabaseObject { ColumnName = reader[0].ToString(), DataType = dataType, ColumnLength = length, IsIdentity = (bool)reader[3] });
                 }
-
-
-            reader.Close();
-            cmd.Connection.Close();
-
-            return dbList;
+            }
         }
 
 
@@ -206,38 +219,53 @@ namespace MarsAddIn.HelperClasses
 
             if (conn == null || query == null) return;
 
-            var cmd = new SqlCommand
+            SqlConnection activeConn = conn;
+            using (var cmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = conn })
             {
-                CommandText = query,
-                CommandType = CommandType.Text,
-                Connection = conn
-            };
-
-            SqlDataReader reader;
-            try
-            {
-                reader = cmd.ExecuteReader();
-            }
-            catch (Exception)
-            {
-                cmd = new SqlCommand
+                SqlDataReader reader;
+                try
                 {
-                    CommandText = query,
-                    CommandType = CommandType.Text,
-                    Connection = ConnectDb(AzObject.ServerName, AzObject.DatabaseName)
-                };
+                    reader = cmd.ExecuteReader();
+                }
+                catch (Exception)
+                {
+                    activeConn = ConnectDb(AzObject.ServerName, AzObject.DatabaseName);
+                    if (activeConn == null) return;
 
-                reader = cmd.ExecuteReader();
+                    using (var retryCmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = activeConn })
+                    {
+                        try
+                        {
+                            reader = retryCmd.ExecuteReader();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show(ex.Message, "Database Read Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            activeConn.Close();
+                            return;
+                        }
+
+                        WriteReaderToRange(reader, startRng, customQuery);
+                        reader.Close();
+                        activeConn.Close();
+                        return;
+                    }
+                }
+
+                WriteReaderToRange(reader, startRng, customQuery);
+                reader.Close();
             }
+
+            activeConn.Close();
+        }
+
+        private static void WriteReaderToRange(SqlDataReader reader, Excel.Range startRng, bool customQuery)
+        {
             if (customQuery)
             {
-                var j = 0;
                 var columns = Enumerable.Range(0, reader.FieldCount).Select(reader.GetName).ToList();
-                foreach (var column in columns)
-                {
-                    startRng.Offset[-1, j].Value = column;
-                    j++;
-                }
+                for (var j = 0; j < columns.Count; j++)
+                    startRng.Offset[-1, j].Value = columns[j];
             }
 
             var i = 0;
@@ -257,9 +285,6 @@ namespace MarsAddIn.HelperClasses
 
                 i++;
             }
-
-            reader.Close();
-            cmd.Connection.Close();
         }
 
         public static WriteResultsObject WriteData(object server, object database, object table, string query,

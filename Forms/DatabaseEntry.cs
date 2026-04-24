@@ -564,31 +564,19 @@ namespace MarsAddIn.Forms
             _dbColumnList.Clear();
             _dbColumnListAll.Clear();
 
-            var clrCnt = 0;
             var searchArray = new List<string> { "ComboBoxLeft", "ComboBoxRight", "lblDB" };
-            for (var i = Controls.Count - 1; i != 0; i--)
+            for (var i = Controls.Count - 1; i >= 0; i--)
             {
-                var indComboBox = Controls[i] as ComboBox;
-                if (indComboBox == null) continue;
-
-                if (searchArray.Count(ar => indComboBox.Name.Contains(ar)) == 0) continue;
-                indComboBox.Dispose();
-
-                if (!indComboBox.Name.Contains(searchArray.First())) continue;
-                clrCnt++;
+                var ctrl = Controls[i];
+                if (ctrl is ComboBox || ctrl is Label)
+                {
+                    if (searchArray.Any(ar => ctrl.Name.Contains(ar)))
+                        ctrl.Dispose();
+                }
             }
 
-            for (var i = Controls.Count - 1; i != 0; i--)
-            {
-                var indLblBox = Controls[i] as Label;
-                if (indLblBox == null) continue;
-
-                if (searchArray.Count(ar => indLblBox.Name.Contains(ar)) == 0) continue;
-                indLblBox.Dispose();
-            }
-
-            Height = Height - (clrCnt * 25);
-            btnDoAction.Top = btnDoAction.Top - (clrCnt * 25);
+            Height -= (_comboBoxCount * 25);
+            btnDoAction.Top -= (_comboBoxCount * 25);
             _comboBoxCount = 0;
         }
 
