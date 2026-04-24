@@ -9,21 +9,29 @@ namespace MarsAddIn
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
-            Application.WorkbookOpen += Application_ActiveWorkbookOpen;
+            Application.WorkbookOpen += Application_WorkbookChanged;
+            Application.WorkbookActivate += Application_WorkbookChanged;
+            Application.SheetActivate += Application_SheetActivate;
+
+            if (Application.ActiveWorkbook != null)
+                UpdateGroupButtons();
         }
 
-        private static void Application_ActiveWorkbookOpen(Excel.Workbook wb)
+        private static void Application_WorkbookChanged(Excel.Workbook wb)
         {
-            if (group.HasGrouping())
-            {
-                Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = true;
-                Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = true;
-            }
-            else
-            {
-                Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = false;
-                Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = false;
-            }
+            UpdateGroupButtons();
+        }
+
+        private static void Application_SheetActivate(object sh)
+        {
+            UpdateGroupButtons();
+        }
+
+        internal static void UpdateGroupButtons()
+        {
+            var hasGrouping = group.HasGrouping();
+            Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = hasGrouping;
+            Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = hasGrouping;
         }
 
         private static void ThisAddIn_Shutdown(object sender, System.EventArgs e)

@@ -387,16 +387,7 @@ namespace MarsAddIn
                 }
             }
 
-            if (group.HasGrouping())
-            {
-                Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = true;
-                Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = true;
-            }
-            else
-            {
-                Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = false;
-                Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = false;
-            }
+            ThisAddIn.UpdateGroupButtons();
         }
 
         private void showHideGrpBtn_Click(object sender, RibbonControlEventArgs e)
@@ -514,16 +505,7 @@ namespace MarsAddIn
 
         private void wksGroup_DialogLauncherClick(object sender, RibbonControlEventArgs e)
         {
-            if (group.HasGrouping())
-            {
-                Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = true;
-                Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = true;
-            }
-            else
-            {
-                Globals.Ribbons.MarsRibbon.showHideAllBtn.Enabled = false;
-                Globals.Ribbons.MarsRibbon.showHideGrpBtn.Enabled = false;
-            }
+            ThisAddIn.UpdateGroupButtons();
         }
 
         private void adminGroup_DialogLauncherClick(object sender, RibbonControlEventArgs e)
