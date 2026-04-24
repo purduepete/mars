@@ -1,0 +1,6 @@
+<Project>
+  <!-- Prevent dotnet restore from running on this legacy packages.config project -->
+  <PropertyGroup>
+    <RestoreProjectStyle>PackagesConfig</RestoreProjectStyle>
+  </PropertyGroup>
+</Project>
