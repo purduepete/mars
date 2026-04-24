@@ -50,36 +50,44 @@ namespace MarsAddIn.Forms
             comboServer.Items.AddRange(databaseServers.ToArray());
             _comboBoxCount = 0;
 
-            if (!isRead)
+            Excel.Worksheet wks = Globals.ThisAddIn.Application.ActiveSheet;
+
+            string namedServer = null, namedDatabase = null, namedTable = null, namedAutoTrunc = null;
+
+            foreach (Excel.Name nameValue in wks.Names)
             {
-                Excel.Worksheet wks = Globals.ThisAddIn.Application.ActiveSheet;
+                var nameValueShort = nameValue.Name.Replace(wks.Name, "").Replace("!", "").Replace("'", "");
+                var val = nameValue.Value.Replace("=", "").Replace("\"", "");
 
-                foreach (Excel.Name nameValue in wks.Names)
+                switch (nameValueShort)
                 {
-                    var nameValueShort = nameValue.Name.Replace(wks.Name, "").Replace("!", "").Replace("'", "");
-                    var val = nameValue.Value.Replace("=", "").Replace("\"", "");
-
-                    switch (nameValueShort)
-                    {
-                        case "DBServer":
-                            comboServer.SelectedItem = val;
-                            PopulateDatabaseNames();
-                            break;
-                        case "DBName":
-                            comboDatabase.SelectedItem = val;
-                            PopulateTablesNames();
-                            break;
-                        case "TableName":
-                            comboTable.SelectedItem = val;
-                            break;
-                        case "AutoTrunc":
-                            cBoxTrunc.Checked = val == "1" || val == "yes" || val == "true";
-                            break;
-                    }
+                    case "DBServer":   namedServer = val;    break;
+                    case "DBName":     namedDatabase = val;  break;
+                    case "TableName":  namedTable = val;     break;
+                    case "AutoTrunc":  namedAutoTrunc = val; break;
                 }
-
-                return;
             }
+
+            if (namedServer != null)
+            {
+                comboServer.SelectedItem = namedServer;
+                PopulateDatabaseNames();
+            }
+
+            if (namedDatabase != null && comboDatabase.Items.Contains(namedDatabase))
+            {
+                comboDatabase.SelectedItem = namedDatabase;
+                PopulateTablesNames();
+            }
+
+            if (namedTable != null && comboTable.Items.Contains(namedTable))
+                comboTable.SelectedItem = namedTable;
+
+            if (!isRead && namedAutoTrunc != null)
+                cBoxTrunc.Checked = namedAutoTrunc == "1" || namedAutoTrunc == "yes" || namedAutoTrunc == "true";
+
+            if (!isRead)
+                return;
 
             var widthMinus = 75;
             Text = @"Read from Database";
@@ -111,7 +119,7 @@ namespace MarsAddIn.Forms
             if (_dbColumnList == null || _dbColumnList.Count == 0)
                 UpdateDbColumnList();
 
-            var maxColumns = Name == "DatabaseEntry" ? _dbColumnListAll.Count : _dbColumnList.Count;
+            var maxColumns = _dbColumnList.Count;
             if (maxColumns == _comboBoxCount || maxColumns == 0) return;
 
             helper.OptimizationOn(true);
@@ -160,8 +168,8 @@ namespace MarsAddIn.Forms
             columnComboBoxRight.SelectionChangeCommitted += SelectionChanged;
 
             var lblText = "";
-            if (_comboBoxCount <= _dbColumnListAll.Count)
-                lblText = _dbColumnListAll[_comboBoxCount - 1].DataType;
+            if (_comboBoxCount <= _dbColumnList.Count)
+                lblText = _dbColumnList[_comboBoxCount - 1].DataType;
 
             var labelDbColumn = new Label
             {
@@ -190,10 +198,10 @@ namespace MarsAddIn.Forms
                 var matchIndex = columnsW0.FindIndex(x => string.Equals(x, columnComboBoxLeft.SelectedItem.ToString(), StringComparison.OrdinalIgnoreCase));
                 if (matchIndex >= 0)
                     columnComboBoxRight.SelectedIndex = matchIndex;
-                else if (_comboBoxCount <= _dbColumnListAll.Count)
+                else if (_comboBoxCount <= _dbColumnList.Count)
                     columnComboBoxRight.SelectedIndex = _comboBoxCount;
             }
-            else if (_comboBoxCount <= _dbColumnListAll.Count)
+            else if (_comboBoxCount <= _dbColumnList.Count)
                 columnComboBoxRight.SelectedIndex = _comboBoxCount;
         }
 
@@ -385,6 +393,9 @@ namespace MarsAddIn.Forms
 
         private void PopulateTablesNames()
         {
+            if (comboServer.SelectedItem == null || comboDatabase.SelectedItem == null)
+                return;
+
             var server = comboServer.SelectedItem.ToString();
             var database = comboDatabase.SelectedItem.ToString();
 
@@ -656,7 +667,7 @@ namespace MarsAddIn.Forms
             if (_dbColumnList == null || _dbColumnList.Count == 0)
                 UpdateDbColumnList();
 
-            var maxColumns = Name == "DatabaseEntry" ? _dbColumnListAll.Count : _dbColumnList.Count;
+            var maxColumns = _dbColumnList.Count;
             if (maxColumns == _comboBoxCount || maxColumns == 0) return;
 
             helper.OptimizationOn(true);
