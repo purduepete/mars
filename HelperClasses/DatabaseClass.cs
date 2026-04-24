@@ -10,6 +10,8 @@ namespace MarsAddIn.HelperClasses
 {
     internal static class DatabaseClass
     {
+        private const int MaxExcelRows = 1048576;
+        private const int MaxVarcharLength = 64 * 1024;
 
         public static List<DatabaseObject> GetDatabaseObjects(
           string serverName,
@@ -136,7 +138,7 @@ namespace MarsAddIn.HelperClasses
                     var length = (int)reader[2];
 
                     if (dataType.Contains("varchar") && length == -1)
-                        length = 64 * 1024;
+                        length = MaxVarcharLength;
 
                     dbList.Add(new DatabaseObject { ColumnName = reader[0].ToString(), DataType = dataType, ColumnLength = length, IsIdentity = (bool)reader[3] });
                 }
@@ -269,7 +271,7 @@ namespace MarsAddIn.HelperClasses
             }
 
             var i = 0;
-            while (reader.Read() && i < 1048576)
+            while (reader.Read() && i < MaxExcelRows)
             {
                 for (var j = 0; j < reader.FieldCount; j++)
                 {
@@ -334,29 +336,41 @@ namespace MarsAddIn.HelperClasses
 
                     if (currentValue != null && !rslt.BadTypeColumns.Contains(j - 1))
                     {
+                        var strVal = currentValue.ToString();
+                        var isValid = true;
+
                         switch (dataType)
                         {
                             case "int":
-                                try
-                                {
-                                    var intVal = Convert.ToInt32(currentValue);
-                                }
-                                catch (Exception)
-                                {
-                                    rslt.BadTypeColumns.Add(j - 1);
-                                }
+                                isValid = int.TryParse(strVal, out _);
+                                break;
+                            case "bigint":
+                                isValid = long.TryParse(strVal, out _);
+                                break;
+                            case "decimal":
+                            case "numeric":
+                            case "money":
+                            case "smallmoney":
+                                isValid = decimal.TryParse(strVal, out _);
+                                break;
+                            case "float":
+                            case "real":
+                                isValid = double.TryParse(strVal, out _);
+                                break;
+                            case "bit":
+                                isValid = strVal == "0" || strVal == "1" || 
+                                          bool.TryParse(strVal, out _);
                                 break;
                             case "datetime":
-                                try
-                                {
-                                    var intVal = Convert.ToDateTime(currentValue);
-                                }
-                                catch (Exception)
-                                {
-                                    rslt.BadTypeColumns.Add(j - 1);
-                                }
+                            case "datetime2":
+                            case "date":
+                            case "smalldatetime":
+                                isValid = DateTime.TryParse(strVal, out _);
                                 break;
                         }
+
+                        if (!isValid)
+                            rslt.BadTypeColumns.Add(j - 1);
                     }
 
 

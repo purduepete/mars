@@ -167,31 +167,14 @@ namespace MarsAddIn
 
         private void wksResize_Click(object sender, RibbonControlEventArgs e)
         {
-            var iRow = 0;
-            var iColumn = 0;
             Excel.Worksheet wks = Globals.ThisAddIn.Application.ActiveSheet;
             Excel.Window aWindow = Globals.ThisAddIn.Application.ActiveWindow;
 
-            foreach (Excel.Range rng in wks.Range["A1:BA500"])
-            {
-                try
-                {
-                    if (rng.Value == null) continue;
+            Excel.Range used = wks.UsedRange;
+            if (used == null || used.Rows.Count <= 1 && used.Columns.Count <= 1) return;
 
-                    string rngValue = rng.Value.ToString();
-                    var rngValueLength = rngValue.Length;
-
-                    if (rngValueLength == 0) continue;
-                    iRow = rng.Row > iRow ? rng.Row : iRow;
-                    iColumn = rng.Column > iColumn ? rng.Column : iColumn;
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }
-
-            if (iRow <= 0 || iColumn <= 0) return;
+            var iRow = used.Row + used.Rows.Count - 1;
+            var iColumn = used.Column + used.Columns.Count - 1;
 
             helper.OptimizationOn();
 
@@ -358,13 +341,8 @@ namespace MarsAddIn
         private void aboutBtn_Click(object sender, RibbonControlEventArgs e)
         {
             var vrs = helper.GetRunningVersion();
-            var msg = "Version " + vrs.Major.ToString() + "." + vrs.Minor.ToString() + "." + vrs.Build.ToString() +
-                      "." +
-                      vrs.Revision.ToString();
-            msg = msg + Environment.NewLine + Environment.NewLine + "This application and the material contained " +
-                  Environment.NewLine +
-                  "within it is Microsoft confidential.";
-            MessageBox.Show(text: msg, caption: @"About");
+            var msg = $"Version {vrs.Major}.{vrs.Minor}.{vrs.Build}.{vrs.Revision}";
+            MessageBox.Show(text: msg, caption: @"About Mars Add-In");
         }
 
         private void addinSettingBtn_Click(object sender, RibbonControlEventArgs e)

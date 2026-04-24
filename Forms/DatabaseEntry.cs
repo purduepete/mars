@@ -348,9 +348,6 @@ namespace MarsAddIn.Forms
                 message += timeToLoad.Seconds == 1 ? "" : "s";
 
                 MessageBox.Show(message, caption: @"Table Load");
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
             }
         }
 
