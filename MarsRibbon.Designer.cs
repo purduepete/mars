@@ -71,9 +71,7 @@ namespace MarsAddIn
             this.gridlinesBtn = this.Factory.CreateRibbonButton();
             this.fmtSeparator = this.Factory.CreateRibbonSeparator();
             this.fmtNumberBtn = this.Factory.CreateRibbonButton();
-            this.fmtNumberMinBtn = this.Factory.CreateRibbonButton();
             this.fmtDollarsBtn = this.Factory.CreateRibbonButton();
-            this.findReplaceGroup = this.Factory.CreateRibbonGroup();
             this.copyPasteGroup = this.Factory.CreateRibbonGroup();
             this.pasteSpecialButton = this.Factory.CreateRibbonButton();
             this.copyPasteFormulaBtn = this.Factory.CreateRibbonButton();
@@ -83,20 +81,11 @@ namespace MarsAddIn
             this.dbSeperator = this.Factory.CreateRibbonSeparator();
             this.btnReadData = this.Factory.CreateRibbonButton();
             this.btnWriteData = this.Factory.CreateRibbonButton();
-            this.fileGroup = this.Factory.CreateRibbonGroup();
-            this.btnFilePath = this.Factory.CreateRibbonButton();
-            this.myFilesMenu = this.Factory.CreateRibbonMenu();
-            this.reloadFilesBtn = this.Factory.CreateRibbonButton();
-            this.editSettingsFileBtn = this.Factory.CreateRibbonButton();
-            this.addCurrentBtn = this.Factory.CreateRibbonButton();
-            this.separator1 = this.Factory.CreateRibbonSeparator();
-            this.btnDuplicate = this.Factory.CreateRibbonButton();
             this.adminGroup = this.Factory.CreateRibbonGroup();
             this.aboutBtn = this.Factory.CreateRibbonButton();
             this.menuAddInSettings = this.Factory.CreateRibbonMenu();
             this.addinSettingBtn = this.Factory.CreateRibbonButton();
             this.button1 = this.Factory.CreateRibbonButton();
-            this.enableAddInBtn = this.Factory.CreateRibbonButton();
             this.settingsBtn = this.Factory.CreateRibbonButton();
             this.tab1.SuspendLayout();
             this.marsTab.SuspendLayout();
@@ -106,7 +95,6 @@ namespace MarsAddIn
             this.fmtGroup.SuspendLayout();
             this.copyPasteGroup.SuspendLayout();
             this.dbGroup.SuspendLayout();
-            this.fileGroup.SuspendLayout();
             this.adminGroup.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -123,10 +111,8 @@ namespace MarsAddIn
             this.marsTab.Groups.Add(this.pivotGroup);
             this.marsTab.Groups.Add(this.wksGroup);
             this.marsTab.Groups.Add(this.fmtGroup);
-            this.marsTab.Groups.Add(this.findReplaceGroup);
             this.marsTab.Groups.Add(this.copyPasteGroup);
             this.marsTab.Groups.Add(this.dbGroup);
-            this.marsTab.Groups.Add(this.fileGroup);
             this.marsTab.Groups.Add(this.adminGroup);
             this.marsTab.Label = "MARS";
             this.marsTab.Name = "marsTab";
@@ -336,7 +322,6 @@ namespace MarsAddIn
             this.fmtGroup.Items.Add(this.defaultMenu);
             this.fmtGroup.Items.Add(this.fmtSeparator);
             this.fmtGroup.Items.Add(this.fmtNumberBtn);
-            this.fmtGroup.Items.Add(this.fmtNumberMinBtn);
             this.fmtGroup.Items.Add(this.fmtDollarsBtn);
             this.fmtGroup.Label = "Formatting";
             this.fmtGroup.Name = "fmtGroup";
@@ -398,15 +383,6 @@ namespace MarsAddIn
             this.fmtNumberBtn.Tag = "Format Number";
             this.fmtNumberBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.fmtNumberBtn_Click);
             // 
-            // fmtNumberMinBtn
-            // 
-            this.fmtNumberMinBtn.Label = "Format Number (min)";
-            this.fmtNumberMinBtn.Name = "fmtNumberMinBtn";
-            this.fmtNumberMinBtn.OfficeImageId = "FormattingDecreaseDecimals";
-            this.fmtNumberMinBtn.ShowImage = true;
-            this.fmtNumberMinBtn.Tag = "Format Number (min)";
-            this.fmtNumberMinBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.fmtNumberMinBtn_Click);
-            // 
             // fmtDollarsBtn
             // 
             this.fmtDollarsBtn.Label = "Format Dollar";
@@ -415,12 +391,6 @@ namespace MarsAddIn
             this.fmtDollarsBtn.ShowImage = true;
             this.fmtDollarsBtn.Tag = "Format Dollar";
             this.fmtDollarsBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.fmtDollarsBtn_Click);
-            // 
-            // findReplaceGroup
-            // 
-            this.findReplaceGroup.Label = "Find/Replace";
-            this.findReplaceGroup.Name = "findReplaceGroup";
-            this.findReplaceGroup.Visible = false;
             // 
             // copyPasteGroup
             // 
@@ -495,77 +465,10 @@ namespace MarsAddIn
             this.btnWriteData.Tag = "Write Data";
             this.btnWriteData.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnWriteData_Click);
             // 
-            // fileGroup
-            // 
-            this.fileGroup.Items.Add(this.btnFilePath);
-            this.fileGroup.Items.Add(this.myFilesMenu);
-            this.fileGroup.Items.Add(this.btnDuplicate);
-            this.fileGroup.Label = "File";
-            this.fileGroup.Name = "fileGroup";
-            // 
-            // btnFilePath
-            // 
-            this.btnFilePath.Label = "File Path";
-            this.btnFilePath.Name = "btnFilePath";
-            this.btnFilePath.OfficeImageId = "FileFind";
-            this.btnFilePath.ShowImage = true;
-            this.btnFilePath.Tag = "File Path";
-            this.btnFilePath.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.btnFilePath_Click);
-            // 
-            // myFilesMenu
-            // 
-            this.myFilesMenu.Dynamic = true;
-            this.myFilesMenu.Items.Add(this.reloadFilesBtn);
-            this.myFilesMenu.Items.Add(this.editSettingsFileBtn);
-            this.myFilesMenu.Items.Add(this.addCurrentBtn);
-            this.myFilesMenu.Items.Add(this.separator1);
-            this.myFilesMenu.Label = "My Files";
-            this.myFilesMenu.Name = "myFilesMenu";
-            this.myFilesMenu.OfficeImageId = "FileOpenRecentFile";
-            this.myFilesMenu.ScreenTip = "A list of files I frequently use";
-            this.myFilesMenu.ShowImage = true;
-            this.myFilesMenu.Tag = "My Files";
-            // 
-            // reloadFilesBtn
-            // 
-            this.reloadFilesBtn.Label = "Reload Files";
-            this.reloadFilesBtn.Name = "reloadFilesBtn";
-            this.reloadFilesBtn.OfficeImageId = "RefreshMeetingDetails";
-            this.reloadFilesBtn.ShowImage = true;
-            this.reloadFilesBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.reloadFiles_Click);
-            // 
-            // editSettingsFileBtn
-            // 
-            this.editSettingsFileBtn.Label = "File List";
-            this.editSettingsFileBtn.Name = "editSettingsFileBtn";
-            this.editSettingsFileBtn.OfficeImageId = "OutlookGears";
-            this.editSettingsFileBtn.ShowImage = true;
-            this.editSettingsFileBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.editSettingsFileBtn_Click);
-            // 
-            // addCurrentBtn
-            // 
-            this.addCurrentBtn.Label = "Add Current";
-            this.addCurrentBtn.Name = "addCurrentBtn";
-            this.addCurrentBtn.OfficeImageId = "AddCalendarMenu";
-            this.addCurrentBtn.ShowImage = true;
-            this.addCurrentBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.addCurrentBtn_Click);
-            // 
-            // separator1
-            // 
-            this.separator1.Name = "separator1";
-            // 
-            // btnDuplicate
-            // 
-            this.btnDuplicate.Label = "Duplicate File";
-            this.btnDuplicate.Name = "btnDuplicate";
-            this.btnDuplicate.Tag = "Duplicate File";
-            this.btnDuplicate.Visible = false;
-            // 
             // adminGroup
             // 
             this.adminGroup.Items.Add(this.aboutBtn);
             this.adminGroup.Items.Add(this.menuAddInSettings);
-            this.adminGroup.Items.Add(this.enableAddInBtn);
             this.adminGroup.Items.Add(this.settingsBtn);
             this.adminGroup.Label = "Administration";
             this.adminGroup.Name = "adminGroup";
@@ -606,15 +509,6 @@ namespace MarsAddIn
             this.button1.ShowImage = true;
             this.button1.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.addinConfigItemesBtn_Click);
             // 
-            // enableAddInBtn
-            // 
-            this.enableAddInBtn.Label = "Enable Add-Ins";
-            this.enableAddInBtn.Name = "enableAddInBtn";
-            this.enableAddInBtn.OfficeImageId = "DataTypeCheckBox";
-            this.enableAddInBtn.ShowImage = true;
-            this.enableAddInBtn.Tag = "Enable Add-Ins";
-            this.enableAddInBtn.Click += new Microsoft.Office.Tools.Ribbon.RibbonControlEventHandler(this.enableAddInBtn_Click);
-            // 
             // settingsBtn
             // 
             this.settingsBtn.Label = "";
@@ -643,8 +537,6 @@ namespace MarsAddIn
             this.copyPasteGroup.PerformLayout();
             this.dbGroup.ResumeLayout(false);
             this.dbGroup.PerformLayout();
-            this.fileGroup.ResumeLayout(false);
-            this.fileGroup.PerformLayout();
             this.adminGroup.ResumeLayout(false);
             this.adminGroup.PerformLayout();
             this.ResumeLayout(false);
@@ -657,16 +549,15 @@ namespace MarsAddIn
         internal Microsoft.Office.Tools.Ribbon.RibbonTab marsTab;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup rngGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton addRowsBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonMenu myFilesMenu;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton reloadFilesBtn;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonButton addColumnsBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonSeparator separator1;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonButton dfltPivot;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton wksSheetListBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup wksGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton wksShowAllBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton wksResizeBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGroup fileGroup;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonButton dupPivotBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup adminGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton aboutBtn;
@@ -674,18 +565,16 @@ namespace MarsAddIn
         internal Microsoft.Office.Tools.Ribbon.RibbonButton headerFormatBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton rowShadingBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton fmtNumberBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton fmtNumberMinBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton fmtDollarsBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup pivotGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton validationBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton pasteSpecialButton;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton settingsBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton editSettingsFileBtn;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonButton myFontBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonGroup findReplaceGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup copyPasteGroup;
         internal Microsoft.Office.Tools.Ribbon.RibbonGroup dbGroup;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnDuplicate;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonButton dynamicNameRangeBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton copyPasteFormulaBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonMenu defaultMenu;
@@ -693,14 +582,13 @@ namespace MarsAddIn
         internal Microsoft.Office.Tools.Ribbon.RibbonMenu nameMenu;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton fixedRangeBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton addinSettingBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton addCurrentBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton enableAddInBtn;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonButton grpUngrpBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton showHideGrpBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton tglFieldListBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton tglFormulaBtn;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton showHideAllBtn;
-        internal Microsoft.Office.Tools.Ribbon.RibbonButton btnFilePath;
+
         internal Microsoft.Office.Tools.Ribbon.RibbonMenu menuAddInSettings;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnConcatStrings;
         internal Microsoft.Office.Tools.Ribbon.RibbonButton btnCreateStructure;

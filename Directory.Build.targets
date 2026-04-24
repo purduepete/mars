@@ -1,0 +1,3 @@
+<Project>
+  <Import Project="SqlClientDeps.targets" Condition="Exists('SqlClientDeps.targets')" />
+</Project>

@@ -40,8 +40,6 @@
             this.checkedListBoxCopyPaste = new System.Windows.Forms.CheckedListBox();
             this.lblDatabase = new System.Windows.Forms.Label();
             this.checkedListBoxDatabase = new System.Windows.Forms.CheckedListBox();
-            this.lblFile = new System.Windows.Forms.Label();
-            this.checkedListBoxFile = new System.Windows.Forms.CheckedListBox();
             this.lblAdministration = new System.Windows.Forms.Label();
             this.checkedListBoxAdmin = new System.Windows.Forms.CheckedListBox();
             this.lblRange = new System.Windows.Forms.Label();
@@ -199,29 +197,6 @@
             this.checkedListBoxDatabase.Size = new System.Drawing.Size(225, 64);
             this.checkedListBoxDatabase.TabIndex = 12;
             // 
-            // lblFile
-            // 
-            this.lblFile.AutoSize = true;
-            this.lblFile.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblFile.Location = new System.Drawing.Point(12, 562);
-            this.lblFile.Name = "lblFile";
-            this.lblFile.Size = new System.Drawing.Size(27, 13);
-            this.lblFile.TabIndex = 13;
-            this.lblFile.Text = "File";
-            this.lblFile.Click += new System.EventHandler(this.lblFile_Click);
-            // 
-            // checkedListBoxFile
-            // 
-            this.checkedListBoxFile.CheckOnClick = true;
-            this.checkedListBoxFile.FormattingEnabled = true;
-            this.checkedListBoxFile.Items.AddRange(new object[] {
-            "File Path",
-            "My Files"});
-            this.checkedListBoxFile.Location = new System.Drawing.Point(12, 579);
-            this.checkedListBoxFile.Name = "checkedListBoxFile";
-            this.checkedListBoxFile.Size = new System.Drawing.Size(225, 34);
-            this.checkedListBoxFile.TabIndex = 14;
-            // 
             // lblAdministration
             // 
             this.lblAdministration.AutoSize = true;
@@ -238,8 +213,7 @@
             this.checkedListBoxAdmin.CheckOnClick = true;
             this.checkedListBoxAdmin.FormattingEnabled = true;
             this.checkedListBoxAdmin.Items.AddRange(new object[] {
-            "About",
-            "Enable Add-Ins"});
+            "About"});
             this.checkedListBoxAdmin.Location = new System.Drawing.Point(12, 638);
             this.checkedListBoxAdmin.Name = "checkedListBoxAdmin";
             this.checkedListBoxAdmin.Size = new System.Drawing.Size(225, 34);
@@ -264,8 +238,6 @@
             this.Controls.Add(this.lblRange);
             this.Controls.Add(this.checkedListBoxAdmin);
             this.Controls.Add(this.lblAdministration);
-            this.Controls.Add(this.checkedListBoxFile);
-            this.Controls.Add(this.lblFile);
             this.Controls.Add(this.checkedListBoxDatabase);
             this.Controls.Add(this.lblDatabase);
             this.Controls.Add(this.checkedListBoxCopyPaste);
@@ -304,8 +276,6 @@
         private System.Windows.Forms.CheckedListBox checkedListBoxCopyPaste;
         private System.Windows.Forms.Label lblDatabase;
         private System.Windows.Forms.CheckedListBox checkedListBoxDatabase;
-        private System.Windows.Forms.Label lblFile;
-        private System.Windows.Forms.CheckedListBox checkedListBoxFile;
         private System.Windows.Forms.Label lblAdministration;
         private System.Windows.Forms.CheckedListBox checkedListBoxAdmin;
         private System.Windows.Forms.Label lblRange;

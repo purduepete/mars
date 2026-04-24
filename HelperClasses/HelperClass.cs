@@ -77,16 +77,6 @@ namespace MarsAddIn.HelperClasses
             input = textBox.Text;
         }
 
-        public static void ClearMenu(object menuName, int startIndex = 0)
-        {
-            var menuObject = (RibbonMenu)menuName;
-            for (var i = menuObject.Items.Count; i >= startIndex + 1; i--)
-            {
-                if (!menuObject.Items[i - 1].Name.Contains("separator"))
-                    menuObject.Items.RemoveAt(i - 1);
-            }
-        }
-
         public static Version GetRunningVersion()
         {
             try
@@ -157,23 +147,6 @@ namespace MarsAddIn.HelperClasses
             }
         }
 
-        public static void OpenFile(object sender, RibbonControlEventArgs e)
-        {
-            var lObj = (RibbonButton)sender;
-            try
-            {
-                Globals.ThisAddIn.Application.Workbooks.Open(Filename: lObj.Description);
-            }
-            catch (Exception e1)
-            {
-                MessageBox.Show(text:
-                    e1.Message.Contains("Sorry, we couldn't find")
-                        ? $"The file {lObj.Description} could not be found"
-                        : e1.Message, caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-            }
-
-        }
-
         public static Point GetLocation(int offsetX, int offsetY = 15, bool leftMost = true)
         {
             var appLocation = Globals.ThisAddIn.Application.Left;
@@ -209,8 +182,7 @@ namespace MarsAddIn.HelperClasses
                 return settingsDict;
             }
 
-            MessageBox.Show(text: @"The add-in settings file was not found here: " + settingsLocation + Environment.NewLine + Environment.NewLine + @"Use the settings button within the Administration group, to create the file.",
-                caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
+            CreateSettingsFile(settingsLocation);
 
             return settingsDict;
         }
@@ -227,7 +199,7 @@ namespace MarsAddIn.HelperClasses
                 var ribbonTabs = officeRibbon.Tabs[1];
                 foreach (var tabGroup in ribbonTabs.Groups)
                     foreach (var ribbonItem in tabGroup.Items)
-                        if (!new[] { "menuAddInSettings" }.Contains(ribbonItem.Name))
+                        if (!new[] { "menuAddInSettings" }.Contains(ribbonItem.Name) && ribbonItem.Tag != null)
                             try
                             {
                                 json.RibbonSettings.Add(ribbonItem.Tag.ToString(), ribbonItem.Visible);
@@ -241,8 +213,24 @@ namespace MarsAddIn.HelperClasses
             }
             else
             {
-                MessageBox.Show(text: @"The add-in settings file was not found here: " + settingsLocation + Environment.NewLine + Environment.NewLine + @"Use the settings button within the Administration group, to create the file.",
-                    caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
+                CreateSettingsFile(settingsLocation);
+                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
+                json.RibbonSettings = new Dictionary<string, bool>();
+
+                var ribbonTabs = officeRibbon.Tabs[1];
+                foreach (var tabGroup in ribbonTabs.Groups)
+                    foreach (var ribbonItem in tabGroup.Items)
+                        if (!new[] { "menuAddInSettings" }.Contains(ribbonItem.Name) && ribbonItem.Tag != null)
+                            try
+                            {
+                                json.RibbonSettings.Add(ribbonItem.Tag.ToString(), ribbonItem.Visible);
+                            }
+                            catch (Exception)
+                            {
+                                // ignored
+                            }
+
+                File.WriteAllText(settingsLocation, JsonConvert.SerializeObject(json));
             }
 
         }
@@ -260,10 +248,29 @@ namespace MarsAddIn.HelperClasses
             }
             else
             {
-                MessageBox.Show(text: @"The add-in settings file was not found here: " + settingsLocation + Environment.NewLine + Environment.NewLine + @"Use the settings button within the Administration group, to create the file.",
-                    caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
+                CreateSettingsFile(settingsLocation);
+                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
+                json.RibbonSettings = dictItems;
+
+                File.WriteAllText(settingsLocation, JsonConvert.SerializeObject(json));
             }
 
+        }
+
+        private static void CreateSettingsFile(string settingsLocation)
+        {
+            var dirLocation = Path.GetDirectoryName(settingsLocation);
+            if (!Directory.Exists(dirLocation))
+            {
+                Directory.CreateDirectory(dirLocation);
+            }
+
+            var marsetting = new json();
+            using (var file = File.CreateText(settingsLocation))
+            {
+                var serializer = new JsonSerializer();
+                serializer.Serialize(file, marsetting);
+            }
         }
 
         public static void ReleaseObject(object o)

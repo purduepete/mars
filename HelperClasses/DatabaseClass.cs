@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Windows.Forms;
 using Excel = Microsoft.Office.Interop.Excel;
@@ -48,11 +48,11 @@ namespace MarsAddIn.HelperClasses
         {
             string connectionString;
 
-            if (serverName == "jimbazure.database.windows.net")
+            if (serverName.EndsWith(".database.windows.net", StringComparison.OrdinalIgnoreCase))
             {
                 AzObject.ServerName = serverName;
                 connectionString =
-                    $"Server=tcp:jimbazure.database.windows.net,1433; Initial Catalog={databaseName}; Persist Security Info=True; User ID=purduepete; Password=Rush2!!2; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=False; Connection Timeout=30;";
+                    $"Server=tcp:{serverName},1433; Initial Catalog={databaseName}; Persist Security Info=False; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=False; Connection Timeout=30; Authentication=Active Directory Interactive;";
             }
             else
                 connectionString = $"Data Source={serverName};Initial Catalog={databaseName};Integrated Security=SSPI;";
@@ -63,8 +63,16 @@ namespace MarsAddIn.HelperClasses
                 cnn.Open();
                 return cnn;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                var message = ex.Message;
+                var inner = ex.InnerException;
+                while (inner != null)
+                {
+                    message += "\n\n" + inner.Message;
+                    inner = inner.InnerException;
+                }
+                MessageBox.Show(message, "Database Connection Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
         }

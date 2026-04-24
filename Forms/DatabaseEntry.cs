@@ -22,6 +22,7 @@ namespace MarsAddIn.Forms
 
         private List<string> _excelHeaderList = new List<string>();
         private List<DatabaseObject> _dbColumnList = new List<DatabaseObject>();
+        private List<DatabaseObject> _dbColumnListAll = new List<DatabaseObject>();
 
         public bool showForm = true;
 
@@ -130,7 +131,8 @@ namespace MarsAddIn.Forms
             if (_dbColumnList == null || _dbColumnList.Count == 0)
                 UpdateDbColumnList();
 
-            if (_dbColumnList.Count == _comboBoxCount || _dbColumnList.Count == 0) return;
+            var maxColumns = Name == "DatabaseEntry" ? _dbColumnListAll.Count : _dbColumnList.Count;
+            if (maxColumns == _comboBoxCount || maxColumns == 0) return;
 
             helper.OptimizationOn(true);
 
@@ -175,8 +177,8 @@ namespace MarsAddIn.Forms
 
 
             var lblText = "";
-            if (_comboBoxCount <= _dbColumnList.Count)
-                lblText = _dbColumnList[_comboBoxCount - 1].DataType;
+            if (_comboBoxCount <= _dbColumnListAll.Count)
+                lblText = _dbColumnListAll[_comboBoxCount - 1].DataType;
 
             var labelDbColumn = new Label
             {
@@ -194,7 +196,7 @@ namespace MarsAddIn.Forms
 
 
             var columnsW0 = new List<string> { "" };
-            columnsW0.AddRange(_dbColumnList.Select(x => x.ColumnName));
+            columnsW0.AddRange(_dbColumnListAll.Select(x => x.ColumnName));
 
             var columnsW = columnsW0.ToArray();
             columnComboBoxRight.Items.AddRange(columnsW);
@@ -202,7 +204,15 @@ namespace MarsAddIn.Forms
             if (_comboBoxCount <= _excelHeaderList.Count)
                 columnComboBoxLeft.SelectedIndex = _comboBoxCount - 1;
 
-            if (_comboBoxCount <= _dbColumnList.Count)
+            if (columnComboBoxLeft.SelectedItem != null)
+            {
+                var matchIndex = columnsW0.FindIndex(x => string.Equals(x, columnComboBoxLeft.SelectedItem.ToString(), StringComparison.OrdinalIgnoreCase));
+                if (matchIndex >= 0)
+                    columnComboBoxRight.SelectedIndex = matchIndex;
+                else if (_comboBoxCount <= _dbColumnList.Count)
+                    columnComboBoxRight.SelectedIndex = _comboBoxCount;
+            }
+            else if (_comboBoxCount <= _dbColumnList.Count)
                 columnComboBoxRight.SelectedIndex = _comboBoxCount;
 
             helper.OptimizationOff(true);
@@ -281,7 +291,7 @@ namespace MarsAddIn.Forms
 
 
                     if (indComboBox.Name.Contains("ComboBoxRight") && indComboBox.SelectedItem != null && (string)indComboBox.SelectedItem != "")
-                        selectedItemsTarget.Add(_dbColumnList.First(db =>
+                        selectedItemsTarget.Add(_dbColumnListAll.First(db =>
                             db.ColumnName == indComboBox.SelectedItem.ToString()));
 
 
@@ -372,7 +382,8 @@ namespace MarsAddIn.Forms
             ClearControls();
             QueryEditorManipulations();
 
-            PopulateDatabaseNames();
+            comboServer.DroppedDown = false;
+            BeginInvoke(new Action(() => PopulateDatabaseNames()));
         }
 
         private void PopulateDatabaseNames()
@@ -495,6 +506,7 @@ namespace MarsAddIn.Forms
             var table = comboTable.SelectedItem.ToString();
 
             _dbColumnList = db.GetDatabaseObjects(server, database, table);
+            _dbColumnListAll = new List<DatabaseObject>(_dbColumnList);
 
             if (!includeId)
             {
@@ -555,7 +567,7 @@ namespace MarsAddIn.Forms
                 j++;
             }
 
-            return columns == null ? null : $"{query} {columns.Substring(0, columns.Length - 2)} FROM [{comboDatabase.SelectedItem}]..[{comboTable.SelectedItem}]";
+            return columns == null ? null : $"{query} {columns.Substring(0, columns.Length - 2)} FROM [{comboDatabase.SelectedItem}].{comboTable.SelectedItem}";
         }
 
         private string ConstructWriteQuery()
@@ -571,6 +583,7 @@ namespace MarsAddIn.Forms
         private void ClearControls()
         {
             _dbColumnList.Clear();
+            _dbColumnListAll.Clear();
 
             var clrCnt = 0;
             var searchArray = new List<string> { "ComboBoxLeft", "ComboBoxRight", "lblDB" };
@@ -649,7 +662,7 @@ namespace MarsAddIn.Forms
 
             var baseQuery = $"SELECT{columnList}{Environment.NewLine}FROM{Environment.NewLine}\t[{comboDatabase.SelectedItem}]";
             if (comboTable.SelectedIndex > -1)
-                baseQuery += $"..[{comboTable.SelectedItem}]";
+                baseQuery += $".{comboTable.SelectedItem}";
 
 
             var qe = new QueryEdit(CustomQuery == "" ? baseQuery : CustomQuery) { StartPosition = FormStartPosition.Manual };
@@ -681,13 +694,14 @@ namespace MarsAddIn.Forms
             if (_dbColumnList == null || _dbColumnList.Count == 0)
                 UpdateDbColumnList();
 
-            if (_dbColumnList.Count == _comboBoxCount || _dbColumnList.Count == 0) return;
+            var maxColumns = Name == "DatabaseEntry" ? _dbColumnListAll.Count : _dbColumnList.Count;
+            if (maxColumns == _comboBoxCount || maxColumns == 0) return;
 
             helper.OptimizationOn(true);
 
 
             var comboBoxCount = _comboBoxCount;
-            for (var i = 0; i < (_dbColumnList.Count - comboBoxCount); i++)
+            for (var i = 0; i < (maxColumns - comboBoxCount); i++)
             {
                 Height += 25;
                 btnDoAction.Top += 25;
@@ -720,8 +734,8 @@ namespace MarsAddIn.Forms
 
 
                 var lblText = "";
-                if (_comboBoxCount <= _dbColumnList.Count)
-                    lblText = _dbColumnList[_comboBoxCount - 1].DataType;
+                if (_comboBoxCount <= _dbColumnListAll.Count)
+                    lblText = _dbColumnListAll[_comboBoxCount - 1].DataType;
 
                 var labelDbColumn = new Label
                 {
@@ -739,7 +753,7 @@ namespace MarsAddIn.Forms
 
 
                 var columnsW0 = new List<string> { "" };
-                columnsW0.AddRange(_dbColumnList.Select(x => x.ColumnName));
+                columnsW0.AddRange(_dbColumnListAll.Select(x => x.ColumnName));
 
                 var columnsW = columnsW0.ToArray();
                 columnComboBoxRight.Items.AddRange(columnsW);
@@ -747,7 +761,15 @@ namespace MarsAddIn.Forms
                 if (_comboBoxCount <= _excelHeaderList.Count)
                     columnComboBoxLeft.SelectedIndex = _comboBoxCount - 1;
 
-                if (_comboBoxCount <= _dbColumnList.Count)
+                if (columnComboBoxLeft.SelectedItem != null)
+                {
+                    var matchIndex = columnsW0.FindIndex(x => string.Equals(x, columnComboBoxLeft.SelectedItem.ToString(), StringComparison.OrdinalIgnoreCase));
+                    if (matchIndex >= 0)
+                        columnComboBoxRight.SelectedIndex = matchIndex;
+                    else if (_comboBoxCount <= _dbColumnListAll.Count)
+                        columnComboBoxRight.SelectedIndex = _comboBoxCount;
+                }
+                else if (_comboBoxCount <= _dbColumnListAll.Count)
                     columnComboBoxRight.SelectedIndex = _comboBoxCount;
             }
 

@@ -1,0 +1,124 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <None Include="packages\Azure.Core.1.38.0\lib\netstandard2.0\Azure.Core.dll">
+      <Link>Azure.Core.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Azure.Identity.1.11.4\lib\netstandard2.0\Azure.Identity.dll">
+      <Link>Azure.Identity.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.Bcl.AsyncInterfaces.1.1.1\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll">
+      <Link>Microsoft.Bcl.AsyncInterfaces.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.Identity.Client.4.61.3\lib\net462\Microsoft.Identity.Client.dll">
+      <Link>Microsoft.Identity.Client.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.Identity.Client.Extensions.Msal.4.61.3\lib\netstandard2.0\Microsoft.Identity.Client.Extensions.Msal.dll">
+      <Link>Microsoft.Identity.Client.Extensions.Msal.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.IdentityModel.Abstractions.6.35.0\lib\net462\Microsoft.IdentityModel.Abstractions.dll">
+      <Link>Microsoft.IdentityModel.Abstractions.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.IdentityModel.JsonWebTokens.6.35.0\lib\net462\Microsoft.IdentityModel.JsonWebTokens.dll">
+      <Link>Microsoft.IdentityModel.JsonWebTokens.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.IdentityModel.Logging.6.35.0\lib\net462\Microsoft.IdentityModel.Logging.dll">
+      <Link>Microsoft.IdentityModel.Logging.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.IdentityModel.Protocols.6.35.0\lib\net462\Microsoft.IdentityModel.Protocols.dll">
+      <Link>Microsoft.IdentityModel.Protocols.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.IdentityModel.Protocols.OpenIdConnect.6.35.0\lib\net462\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll">
+      <Link>Microsoft.IdentityModel.Protocols.OpenIdConnect.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\Microsoft.IdentityModel.Tokens.6.35.0\lib\net462\Microsoft.IdentityModel.Tokens.dll">
+      <Link>Microsoft.IdentityModel.Tokens.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll">
+      <Link>System.Buffers.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.ClientModel.1.0.0\lib\netstandard2.0\System.ClientModel.dll">
+      <Link>System.ClientModel.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Configuration.ConfigurationManager.6.0.1\lib\net461\System.Configuration.ConfigurationManager.dll">
+      <Link>System.Configuration.ConfigurationManager.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Diagnostics.DiagnosticSource.6.0.1\lib\net461\System.Diagnostics.DiagnosticSource.dll">
+      <Link>System.Diagnostics.DiagnosticSource.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.IdentityModel.Tokens.Jwt.6.35.0\lib\net462\System.IdentityModel.Tokens.Jwt.dll">
+      <Link>System.IdentityModel.Tokens.Jwt.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Memory.Data.1.0.2\lib\netstandard2.0\System.Memory.Data.dll">
+      <Link>System.Memory.Data.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Security.AccessControl.6.0.0\lib\net461\System.Security.AccessControl.dll">
+      <Link>System.Security.AccessControl.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Security.Cryptography.ProtectedData.4.7.0\lib\net461\System.Security.Cryptography.ProtectedData.dll">
+      <Link>System.Security.Cryptography.ProtectedData.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Security.Permissions.6.0.0\lib\net461\System.Security.Permissions.dll">
+      <Link>System.Security.Permissions.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Security.Principal.Windows.5.0.0\lib\net461\System.Security.Principal.Windows.dll">
+      <Link>System.Security.Principal.Windows.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Text.Encodings.Web.6.0.0\lib\net461\System.Text.Encodings.Web.dll">
+      <Link>System.Text.Encodings.Web.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Text.Json.4.7.2\lib\net461\System.Text.Json.dll">
+      <Link>System.Text.Json.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+    <None Include="packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll">
+      <Link>System.Threading.Tasks.Extensions.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+</Project>

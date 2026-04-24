@@ -1,4 +1,5 @@
-﻿using Excel = Microsoft.Office.Interop.Excel;
+﻿using System.Net;
+using Excel = Microsoft.Office.Interop.Excel;
 using group = MarsAddIn.HelperClasses.GroupClass;
 
 namespace MarsAddIn
@@ -7,6 +8,7 @@ namespace MarsAddIn
     {
         private void ThisAddIn_Startup(object sender, System.EventArgs e)
         {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
             Application.WorkbookOpen += Application_ActiveWorkbookOpen;
         }
 

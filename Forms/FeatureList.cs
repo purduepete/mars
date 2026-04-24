@@ -13,7 +13,6 @@ namespace MarsAddIn.Forms
         private bool _lbFormatting;
         private bool _lbCopyPaste;
         private bool _lbDatabase;
-        private bool _lbFile;
         private bool _lbAdmin;
 
         public frmFeatureList()
@@ -26,7 +25,6 @@ namespace MarsAddIn.Forms
             _lbFormatting = true;
             _lbCopyPaste = true;
             _lbDatabase = true;
-            _lbFile = true;
             _lbAdmin = true;
 
             var ribbonSettings = helper.LoadRibbonItemSettings();
@@ -37,7 +35,6 @@ namespace MarsAddIn.Forms
             ListBoxWorkerWrite(checkedListBoxFormatting, ribbonSettings);
             ListBoxWorkerWrite(checkedListBoxCopyPaste, ribbonSettings);
             ListBoxWorkerWrite(checkedListBoxDatabase, ribbonSettings);
-            ListBoxWorkerWrite(checkedListBoxFile, ribbonSettings);
             ListBoxWorkerWrite(checkedListBoxAdmin, ribbonSettings);
         }
 
@@ -51,7 +48,6 @@ namespace MarsAddIn.Forms
             ribbonSettings = ListBoxWorkerRead(checkedListBoxFormatting, ribbonSettings);
             ribbonSettings = ListBoxWorkerRead(checkedListBoxCopyPaste, ribbonSettings);
             ribbonSettings = ListBoxWorkerRead(checkedListBoxDatabase, ribbonSettings);
-            ribbonSettings = ListBoxWorkerRead(checkedListBoxFile, ribbonSettings);
             ribbonSettings = ListBoxWorkerRead(checkedListBoxAdmin, ribbonSettings);
 
             helper.SaveRibbonItemSettings(ribbonSettings);
@@ -113,12 +109,6 @@ namespace MarsAddIn.Forms
         {
             ListBoxWorkerToggleAll(checkedListBoxDatabase, _lbDatabase);
             _lbDatabase = !_lbDatabase;
-        }
-
-        private void lblFile_Click(object sender, EventArgs e)
-        {
-            ListBoxWorkerToggleAll(checkedListBoxFile, _lbFile);
-            _lbFile = !_lbFile;
         }
 
         private void lblAdministration_Click(object sender, EventArgs e)

@@ -7,7 +7,6 @@ using MarsAddIn.Forms;
 using helper = MarsAddIn.HelperClasses.HelperClass;
 using group = MarsAddIn.HelperClasses.GroupClass;
 using json = MarsAddIn.HelperClasses.MarsSettings;
-using SavedFiles = MarsAddIn.HelperClasses.SavedFiles;
 
 using Excel = Microsoft.Office.Interop.Excel;
 using Microsoft.Office.Tools.Ribbon;
@@ -24,7 +23,6 @@ namespace MarsAddIn
     {
         private void MarsRibbon_Load(object sender, RibbonUIEventArgs e)
         {
-            LoadSavedFileMenu(myFilesMenu);
             var ribbonSettings = helper.LoadRibbonItemSettings();
             if (ribbonSettings.Count == 0)
             {
@@ -39,7 +37,8 @@ namespace MarsAddIn
                 foreach (var ribbonGroupItem in ribbonGroup.Items)
                     try
                     {
-                        ribbonGroupItem.Visible = ribbonSettings[ribbonGroupItem.Tag.ToString()];
+                        if (ribbonGroupItem.Tag != null && ribbonSettings.ContainsKey(ribbonGroupItem.Tag.ToString()))
+                            ribbonGroupItem.Visible = ribbonSettings[ribbonGroupItem.Tag.ToString()];
                     }
                     catch (Exception)
                     {
@@ -58,14 +57,14 @@ namespace MarsAddIn
                 Excel.FormatCondition fc = selRange.FormatConditions.Add(Type: Excel.XlFormatConditionType.xlExpression,
                     Formula1: (selRange.Row % 2 == 1 ? "=MOD(ROW(), 2)" : "=NOT(MOD(ROW(), 2))"));
 
-                fc.Font.Color = Color.WhiteSmoke;
-                fc.Interior.Color = Color.FromArgb(1, 80, 80, 80);
+                fc.Font.Color = Color.Black;
+                fc.Interior.Color = Color.FromArgb(1, 217, 217, 217);
 
                 Excel.FormatCondition fc1 = selRange.FormatConditions.Add(Type: Excel.XlFormatConditionType.xlExpression,
                     Formula1: (selRange.Row % 2 == 1 ? "=NOT(MOD(ROW(), 2))" : "=MOD(ROW(), 2)"));
 
                 fc1.Font.Color = Color.Black;
-                fc1.Interior.Color = Color.FromArgb(1, 217, 217, 217);
+                fc1.Interior.Color = Color.White;
             }
             catch (Exception)
             {
@@ -91,12 +90,6 @@ namespace MarsAddIn
 
             if (tblCreateForm.showForm)
                 tblCreateForm.Show();
-        }
-
-        private void reloadFiles_Click(object sender, RibbonControlEventArgs e)
-        {
-            helper.ClearMenu(myFilesMenu, 3);
-            LoadSavedFileMenu(myFilesMenu);
         }
 
         private void addRowsButton_Click(object sender, RibbonControlEventArgs e)
@@ -284,19 +277,6 @@ namespace MarsAddIn
             helper.OptimizationOff();
         }
 
-        private void fmtNumberMinBtn_Click(object sender, RibbonControlEventArgs e)
-        {
-            helper.OptimizationOn();
-
-            Excel.Range selRange = Globals.ThisAddIn.Application.Selection;
-            foreach (Excel.Range rng in selRange)
-            {
-                rng.NumberFormat = "#,##0,;(#,##0,)";
-            }
-
-            helper.OptimizationOff();
-        }
-
         private void fmtDollarsBtn_Click(object sender, RibbonControlEventArgs e)
         {
             helper.OptimizationOn();
@@ -320,52 +300,6 @@ namespace MarsAddIn
             Globals.ThisAddIn.Application.CommandBars.ExecuteMso("PasteSpecialDialog");
         }
 
-        private void editSettingsFileBtn_Click(object sender, RibbonControlEventArgs e)
-        {
-            var fileLocation = "";
-            var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
-            if (File.Exists(settingsLocation))
-            {
-                var settingsReader = new JsonTextReader(new StreamReader(settingsLocation));
-                try
-                {
-                    while (settingsReader.Read())
-                    {
-                        if (settingsReader.TokenType != JsonToken.String) continue;
-                        var propKey =
-                            settingsReader.Path.Substring(
-                                settingsReader.Path.IndexOf(".", StringComparison.Ordinal) + 1);
-                        var propValue = settingsReader.Value.ToString();
-
-                        if (propKey == "SavedFileLocation")
-                            fileLocation = propValue;
-                    }
-                }
-                catch (Exception)
-                {
-                    settingsReader.Close();
-                }
-                settingsReader.Close();
-                if (File.Exists(fileLocation))
-                    Process.Start(fileLocation);
-                else
-                {
-                    MessageBox.Show(
-                        text: @"The 'SavedFile' setting file was not found here: " + fileLocation + Environment.NewLine +
-                              Environment.NewLine + @"Please add to the main settings file contained here: " +
-                              settingsLocation,
-                        caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-                }
-            }
-            else
-            {
-                MessageBox.Show(
-                    text: @"The  setting file was not found here: " + settingsLocation + Environment.NewLine +
-                          Environment.NewLine + @"Please either create or verify it exists ",
-                    caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-            }
-        }
-
         private void myFontBtn_Click(object sender, RibbonControlEventArgs e)
         {
             helper.OptimizationOn();
@@ -373,8 +307,8 @@ namespace MarsAddIn
             try
             {
                 Excel.Worksheet wks = Globals.ThisAddIn.Application.ActiveSheet;
-                wks.Cells.Font.Size = 10;
-                wks.Cells.Font.Name = "Segoe UI";
+                wks.Cells.Font.Size = 11;
+                wks.Cells.Font.Name = "Aptos Narrow";
             }
             catch (Exception)
             {
@@ -451,7 +385,7 @@ namespace MarsAddIn
             }
             else
             {
-                var marsetting = new json { SavedFileLocation = $"{dirLocation}fileLocationSettings.json" };
+                var marsetting = new json();
                 using (var file = File.CreateText(fileLocation))
                 {
                     var serializer = new JsonSerializer();
@@ -465,78 +399,6 @@ namespace MarsAddIn
         private void rangeGroup_DialogLauncherClick(object sender, RibbonControlEventArgs e)
         {
             Globals.ThisAddIn.Application.CommandBars.ExecuteMso("NameManager");
-        }
-
-        private void enableAddInBtn_Click(object sender, RibbonControlEventArgs e)
-        {
-            var app = Globals.ThisAddIn.Application;
-            var nexus = app.COMAddIns.Item("Nexus");
-            var msra = app.COMAddIns.Item("MSRA");
-
-            nexus.Connect = true;
-            msra.Connect = true;
-        }
-
-        private void addCurrentBtn_Click(object sender, RibbonControlEventArgs e)
-        {
-            var wkbPath = Globals.ThisAddIn.Application.ActiveWorkbook.Path;
-
-            if (string.IsNullOrEmpty(wkbPath))
-            {
-                MessageBox.Show(
-                    text:
-                    @"A path for the active workbook was not found; has this file been previously saved?",
-                    caption: @"Path Not Found", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-            }
-            else
-            {
-                var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
-                if (File.Exists(settingsLocation))
-                {
-                    var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
-                    var fileLocation = json.SavedFileLocation;
-
-                    if (File.Exists(fileLocation))
-                    {
-                        var savedFileList = JsonConvert.DeserializeObject<SavedFiles>(File.ReadAllText(fileLocation));
-                        const string message = "What is the label for this file?";
-                        const string caption = "File Label";
-
-                        var myFileName = Globals.ThisAddIn.Application.InputBox(Prompt: message, Title: caption,
-                            Default: "", Top: 10, Left: 10);
-                        if (string.IsNullOrEmpty(myFileName)) return;
-
-                        savedFileList.SavedFilesLocation.Add(myFileName,
-                            Globals.ThisAddIn.Application.ActiveWorkbook.FullName);
-                        using (var file = File.CreateText(fileLocation))
-                        {
-                            var serializer = new JsonSerializer();
-                            serializer.Serialize(file, savedFileList);
-                        }
-
-                        helper.ClearMenu(myFilesMenu, 3);
-                        LoadSavedFileMenu(myFilesMenu);
-                    }
-                    else
-                    {
-                        MessageBox.Show(
-                            text:
-                            @"The saved file setting file was not found here: " + fileLocation + Environment.NewLine +
-                            Environment.NewLine + @"Please add to the main settings file contained here: " +
-                            settingsLocation,
-                            caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-                    }
-                }
-                else
-                {
-                    MessageBox.Show(
-                        text:
-                        @"The add-in settings file was not found here: " + settingsLocation + Environment.NewLine +
-                        Environment.NewLine +
-                        @"Use the settings button within the Administration group, to create the file.",
-                        caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-                }
-            }
         }
 
         private void grpUngrpBtn_Click(object sender, RibbonControlEventArgs e)
@@ -617,13 +479,6 @@ namespace MarsAddIn
             Globals.ThisAddIn.Application.CommandBars.ExecuteMso("PivotTableGenerateGetPivotData");
         }
 
-        private void btnFilePath_Click(object sender, RibbonControlEventArgs e)
-        {
-            var wkb = Globals.ThisAddIn.Application.ActiveWorkbook;
-            var input = wkb.FullName;
-            helper.ShowInputDialog(ref input);
-        }
-
         private void btnConcat_Click(object sender, RibbonControlEventArgs e)
         {
             var hasString = false;
@@ -688,49 +543,6 @@ namespace MarsAddIn
                 dbEntryFrm.Show();
         }
 
-
-        private void AddMenuItem(object menuName, string menuLabel, string menuPath, string method)
-        {
-            if (method == null) throw new ArgumentNullException(nameof(method));
-            var menuObject = (RibbonMenu)menuName;
-
-
-            var rb = Factory.CreateRibbonButton();
-            rb.Label = menuLabel;
-            rb.Description = menuPath;
-            rb.OfficeImageId = "MicrosoftExcel";
-            rb.Click += helper.OpenFile;
-            menuObject.Items.Add(rb);
-        }
-
-        private void LoadSavedFileMenu(object ribbonMenu)
-        {
-            var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
-
-            if (File.Exists(settingsLocation))
-            {
-                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
-                var fileLocation = json.SavedFileLocation;
-
-                if (File.Exists(fileLocation))
-                {
-                    var savedFileList = JsonConvert.DeserializeObject<SavedFiles>(File.ReadAllText(fileLocation));
-
-                    foreach (var savedFile in savedFileList.SavedFilesLocation)
-                        AddMenuItem(ribbonMenu, savedFile.Key, savedFile.Value, "openFile");
-                }
-                else
-                {
-                    MessageBox.Show(text: @"The saved file setting file was not found here: " + fileLocation + Environment.NewLine + Environment.NewLine + @"Please add to the main settings file contained here: " + settingsLocation,
-                        caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-                }
-            }
-            else
-            {
-                MessageBox.Show(text: @"The add-in settings file was not found here: " + settingsLocation + Environment.NewLine + Environment.NewLine + @"Use the settings button within the Administration group, to create the file.",
-                    caption: @"Missing File", buttons: MessageBoxButtons.OK, icon: MessageBoxIcon.Error);
-            }
-        }
 
         private void wksGroup_DialogLauncherClick(object sender, RibbonControlEventArgs e)
         {
