@@ -18,7 +18,6 @@ namespace MarsAddIn.Forms
     {
         private int _comboBoxCount;
         public string CustomQuery;
-        private bool _readData;
 
         private List<string> _excelHeaderList = new List<string>();
         private List<DatabaseObject> _dbColumnList = new List<DatabaseObject>();
@@ -28,18 +27,17 @@ namespace MarsAddIn.Forms
 
         public DatabaseEntry(string intType = "Write")
         {
-            _readData = intType != "Write";
+            var isRead = intType != "Write";
 
             InitializeComponent();
-            var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
 
-            if (!File.Exists(settingsLocation))
+            if (!File.Exists(helper.SettingsPath))
             {
                 showForm = false;
                 return;
             }
 
-            var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
+            var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(helper.SettingsPath));
             var databaseServers = json.DatabaseServers;
 
             if (databaseServers == null)
@@ -52,49 +50,32 @@ namespace MarsAddIn.Forms
             comboServer.Items.AddRange(databaseServers.ToArray());
             _comboBoxCount = 0;
 
-            if (!_readData)
+            if (!isRead)
             {
                 Excel.Worksheet wks = Globals.ThisAddIn.Application.ActiveSheet;
 
                 foreach (Excel.Name nameValue in wks.Names)
                 {
                     var nameValueShort = nameValue.Name.Replace(wks.Name, "").Replace("!", "").Replace("'", "");
-                    if (nameValueShort != "DBServer") continue;
+                    var val = nameValue.Value.Replace("=", "").Replace("\"", "");
 
-                    var dbServer = nameValue.Value.Replace("=", "").Replace("\"", "");
-                    comboServer.SelectedItem = dbServer;
-                    PopulateDatabaseNames();
-                }
-
-                foreach (Excel.Name nameValue in wks.Names)
-                {
-                    var nameValueShort = nameValue.Name.Replace(wks.Name, "").Replace("!", "").Replace("'", "");
-                    if (nameValueShort != "DBName") continue;
-
-                    var dbName = nameValue.Value.Replace("=", "").Replace("\"", "");
-                    comboDatabase.SelectedItem = dbName;
-                    PopulateTablesNames();
-                }
-
-                foreach (Excel.Name nameValue in wks.Names)
-                {
-                    var nameValueShort = nameValue.Name.Replace(wks.Name, "").Replace("!", "").Replace("'", "");
-                    if (nameValueShort != "TableName") continue;
-
-                    var tableName = nameValue.Value.Replace("=", "").Replace("\"", "");
-                    comboTable.SelectedItem = tableName;
-                }
-
-                foreach (Excel.Name nameValue in wks.Names)
-                {
-
-                    var nameValueShort = nameValue.Name.Replace(wks.Name, "").Replace("!", "").Replace("'", "");
-                    if (nameValueShort != "AutoTrunc") continue;
-
-                    var autoTrunc = nameValue.Value.Replace("=", "").Replace("\"", "");
-                    var autoTruncBln = autoTrunc == "1" || (autoTrunc == "yes" || (autoTrunc == "true"));
-
-                    cBoxTrunc.Checked = autoTruncBln;
+                    switch (nameValueShort)
+                    {
+                        case "DBServer":
+                            comboServer.SelectedItem = val;
+                            PopulateDatabaseNames();
+                            break;
+                        case "DBName":
+                            comboDatabase.SelectedItem = val;
+                            PopulateTablesNames();
+                            break;
+                        case "TableName":
+                            comboTable.SelectedItem = val;
+                            break;
+                        case "AutoTrunc":
+                            cBoxTrunc.Checked = val == "1" || val == "yes" || val == "true";
+                            break;
+                    }
                 }
 
                 return;
@@ -124,7 +105,6 @@ namespace MarsAddIn.Forms
 
         private void btnPlus_Click(object sender, EventArgs e)
         {
-            /* Get date for source/target */
             if (Name == "DatabaseEntry")
                 _excelHeaderList = db.GetExcelColumns(_excelHeaderList, cboxHeaderRow.Checked);
 
@@ -135,7 +115,12 @@ namespace MarsAddIn.Forms
             if (maxColumns == _comboBoxCount || maxColumns == 0) return;
 
             helper.OptimizationOn(true);
+            AddColumnRow();
+            helper.OptimizationOff(true);
+        }
 
+        private void AddColumnRow()
+        {
             Height += 25;
             btnDoAction.Top += 25;
             _comboBoxCount++;
@@ -159,7 +144,6 @@ namespace MarsAddIn.Forms
                 if (_comboBoxCount <= _dbColumnList.Count)
                     columnComboBoxLeft.SelectedIndex = _comboBoxCount - 1;
 
-                helper.OptimizationOff(true);
                 return;
             }
 
@@ -174,7 +158,6 @@ namespace MarsAddIn.Forms
             };
             Controls.Add(columnComboBoxRight);
             columnComboBoxRight.SelectionChangeCommitted += SelectionChanged;
-
 
             var lblText = "";
             if (_comboBoxCount <= _dbColumnListAll.Count)
@@ -194,12 +177,10 @@ namespace MarsAddIn.Forms
 
             columnComboBoxLeft.Items.AddRange(_excelHeaderList.ToArray());
 
-
             var columnsW0 = new List<string> { "" };
             columnsW0.AddRange(_dbColumnListAll.Select(x => x.ColumnName));
 
-            var columnsW = columnsW0.ToArray();
-            columnComboBoxRight.Items.AddRange(columnsW);
+            columnComboBoxRight.Items.AddRange(columnsW0.ToArray());
 
             if (_comboBoxCount <= _excelHeaderList.Count)
                 columnComboBoxLeft.SelectedIndex = _comboBoxCount - 1;
@@ -209,13 +190,11 @@ namespace MarsAddIn.Forms
                 var matchIndex = columnsW0.FindIndex(x => string.Equals(x, columnComboBoxLeft.SelectedItem.ToString(), StringComparison.OrdinalIgnoreCase));
                 if (matchIndex >= 0)
                     columnComboBoxRight.SelectedIndex = matchIndex;
-                else if (_comboBoxCount <= _dbColumnList.Count)
+                else if (_comboBoxCount <= _dbColumnListAll.Count)
                     columnComboBoxRight.SelectedIndex = _comboBoxCount;
             }
-            else if (_comboBoxCount <= _dbColumnList.Count)
+            else if (_comboBoxCount <= _dbColumnListAll.Count)
                 columnComboBoxRight.SelectedIndex = _comboBoxCount;
-
-            helper.OptimizationOff(true);
         }
 
         private void btnMinus_Click(object sender, EventArgs e)
@@ -414,7 +393,7 @@ namespace MarsAddIn.Forms
 
             comboTable.Items.Clear();
 
-            var tbls = db.GetTables(db.GetDatabaseObjects(server, database, includeView: _readData));
+            var tbls = db.GetTables(db.GetDatabaseObjects(server, database, includeView: Name == "DatabaseRead"));
 
             if (tbls.Length > 0)
                 comboTable.Items.AddRange(tbls);
@@ -616,7 +595,7 @@ namespace MarsAddIn.Forms
         private void SelectionChanged(object sender, EventArgs e)
         {
             var ctrl = (ComboBox)sender;
-            var cntrlNum = int.Parse(ctrl.Name.Substring(ctrl.Name.Length - 1));
+            var cntrlNum = int.Parse(ctrl.Name.Substring(ctrl.Name.LastIndexOf('_') + 1));
 
             for (var i = Controls.Count - 1; i != 0; i--)
             {
@@ -625,14 +604,13 @@ namespace MarsAddIn.Forms
 
                 if (!indLblBox.Name.Contains("lblDB")) continue;
 
-                var lblNum = int.Parse(indLblBox.Name.Substring(indLblBox.Name.Length - 1));
+                var lblNum = int.Parse(indLblBox.Name.Substring(indLblBox.Name.LastIndexOf('_') + 1));
                 if (lblNum != cntrlNum) continue;
 
-                foreach (var dbobj in _dbColumnList)
+                foreach (var dbobj in _dbColumnListAll)
                     if (dbobj.ColumnName == (string)ctrl.SelectedItem)
                     {
-                        var colLength = dbobj.ColumnLength;
-                        indLblBox.Text = colLength == 0 ? "int" : $"varchar({colLength})";
+                        indLblBox.Text = dbobj.DataType;
                     }
 
                 indLblBox.ForeColor = Color.Black;
@@ -687,7 +665,6 @@ namespace MarsAddIn.Forms
 
         private void btnPlusPlus_Click(object sender, EventArgs e)
         {
-            /* Get date for source/target */
             if (Name == "DatabaseEntry")
                 _excelHeaderList = db.GetExcelColumns(_excelHeaderList, cboxHeaderRow.Checked);
 
@@ -699,80 +676,9 @@ namespace MarsAddIn.Forms
 
             helper.OptimizationOn(true);
 
-
-            var comboBoxCount = _comboBoxCount;
-            for (var i = 0; i < (maxColumns - comboBoxCount); i++)
-            {
-                Height += 25;
-                btnDoAction.Top += 25;
-                _comboBoxCount++;
-
-                var columnComboBoxLeft = new ComboBox
-                {
-                    Top = (btnDoAction.Top - 40),
-                    Left = comboTable.Left,
-                    Height = 18,
-                    Width = 148,
-                    DropDownStyle = ComboBoxStyle.DropDownList,
-                    Name = $"ComboBoxLeft_{_comboBoxCount}",
-                };
-
-                Controls.Add(columnComboBoxLeft);
-
-
-                var columnComboBoxRight = new ComboBox
-                {
-                    Top = columnComboBoxLeft.Top,
-                    Left = ((comboTable.Left + comboTable.Width) - columnComboBoxLeft.Width),
-                    Height = columnComboBoxLeft.Height,
-                    Width = columnComboBoxLeft.Width,
-                    DropDownStyle = columnComboBoxLeft.DropDownStyle,
-                    Name = $"ComboBoxRight_{_comboBoxCount}"
-                };
-                Controls.Add(columnComboBoxRight);
-                columnComboBoxRight.SelectionChangeCommitted += SelectionChanged;
-
-
-                var lblText = "";
-                if (_comboBoxCount <= _dbColumnListAll.Count)
-                    lblText = _dbColumnListAll[_comboBoxCount - 1].DataType;
-
-                var labelDbColumn = new Label
-                {
-                    Top = columnComboBoxRight.Top + 2,
-                    Left = columnComboBoxRight.Left + columnComboBoxRight.Width + 10,
-                    Height = 18,
-                    Width = 85,
-                    Name = $"lblDB_{_comboBoxCount}",
-                    Text = lblText,
-                    TextAlign = ContentAlignment.MiddleLeft
-                };
-                Controls.Add(labelDbColumn);
-
-                columnComboBoxLeft.Items.AddRange(_excelHeaderList.ToArray());
-
-
-                var columnsW0 = new List<string> { "" };
-                columnsW0.AddRange(_dbColumnListAll.Select(x => x.ColumnName));
-
-                var columnsW = columnsW0.ToArray();
-                columnComboBoxRight.Items.AddRange(columnsW);
-
-                if (_comboBoxCount <= _excelHeaderList.Count)
-                    columnComboBoxLeft.SelectedIndex = _comboBoxCount - 1;
-
-                if (columnComboBoxLeft.SelectedItem != null)
-                {
-                    var matchIndex = columnsW0.FindIndex(x => string.Equals(x, columnComboBoxLeft.SelectedItem.ToString(), StringComparison.OrdinalIgnoreCase));
-                    if (matchIndex >= 0)
-                        columnComboBoxRight.SelectedIndex = matchIndex;
-                    else if (_comboBoxCount <= _dbColumnListAll.Count)
-                        columnComboBoxRight.SelectedIndex = _comboBoxCount;
-                }
-                else if (_comboBoxCount <= _dbColumnListAll.Count)
-                    columnComboBoxRight.SelectedIndex = _comboBoxCount;
-            }
-
+            var remaining = maxColumns - _comboBoxCount;
+            for (var i = 0; i < remaining; i++)
+                AddColumnRow();
 
             helper.OptimizationOff(true);
         }

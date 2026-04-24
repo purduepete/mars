@@ -65,6 +65,7 @@ namespace MarsAddIn.HelperClasses
             }
             catch (Exception ex)
             {
+                cnn.Dispose();
                 var message = ex.Message;
                 var inner = ex.InnerException;
                 while (inner != null)
@@ -132,51 +133,34 @@ namespace MarsAddIn.HelperClasses
 
         private static bool ExecuteOnDatabase(SqlConnection conn, string query)
         {
-            bool result;
-            var cmd = new SqlCommand
-            {
-                CommandText = query,
-                CommandType = CommandType.Text,
-                Connection = conn
-            };
-
             try
             {
-                cmd.ExecuteNonQuery();
-                result = true;
+                using (var cmd = new SqlCommand { CommandText = query, CommandType = CommandType.Text, Connection = conn })
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                result = false;
+                MessageBox.Show(ex.Message, "Database Execute Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
             }
-
-            conn.Close();
-            return result;
+            finally
+            {
+                conn.Close();
+            }
         }
 
 
         public static string[] GetDatabases(List<DatabaseObject> dbobjs)
         {
-            if (dbobjs.Count == 0)
-                return new string[0];
-
-            var dbarray = new string[dbobjs.Count];
-            for (var i = 0; i < dbobjs.Count; i++)
-                dbarray[i] = dbobjs[i].DatabaseName;
-
-            return dbarray;
+            return dbobjs.Select(x => x.DatabaseName).ToArray();
         }
 
         public static string[] GetTables(List<DatabaseObject> dbobjs)
         {
-            if (dbobjs.Count == 0)
-                return new string[0];
-
-            var dbarray = new string[dbobjs.Count];
-            for (var i = 0; i < dbobjs.Count; i++)
-                dbarray[i] = dbobjs[i].TableName;
-
-            return dbarray;
+            return dbobjs.Select(x => x.TableName).ToArray();
         }
 
         public static List<string> GetExcelColumns(List<string> headerList, bool withHeader = true)

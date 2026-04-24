@@ -13,7 +13,6 @@ using Microsoft.Office.Tools.Ribbon;
 using Newtonsoft.Json;
 using System.Diagnostics;
 using System.Linq;
-using System.Linq.Expressions;
 using XlHAlign = Microsoft.Office.Interop.Excel.XlHAlign;
 using XlVAlign = Microsoft.Office.Interop.Excel.XlVAlign;
 
@@ -370,30 +369,21 @@ namespace MarsAddIn
 
         private void addinSettingBtn_Click(object sender, RibbonControlEventArgs e)
         {
-            const string addInDir = @"\MarsAddIn\";
-
-            var dirLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + addInDir;
+            var dirLocation = Path.GetDirectoryName(helper.SettingsPath);
             if (!Directory.Exists(dirLocation))
-            {
                 Directory.CreateDirectory(dirLocation);
-            }
 
-            var fileLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + addInDir + "settings.json";
-            if (File.Exists(fileLocation))
-            {
-                Process.Start(fileLocation);
-            }
-            else
+            if (!File.Exists(helper.SettingsPath))
             {
                 var marsetting = new json();
-                using (var file = File.CreateText(fileLocation))
+                using (var file = File.CreateText(helper.SettingsPath))
                 {
                     var serializer = new JsonSerializer();
                     serializer.Serialize(file, marsetting);
                 }
-
-                Process.Start(fileLocation);
             }
+
+            Process.Start(helper.SettingsPath);
         }
 
         private void rangeGroup_DialogLauncherClick(object sender, RibbonControlEventArgs e)

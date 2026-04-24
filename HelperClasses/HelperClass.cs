@@ -17,6 +17,9 @@ namespace MarsAddIn.HelperClasses
 {
     internal static class HelperClass
     {
+        internal static readonly string SettingsPath = 
+            Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA") ?? "", @"MarsAddIn\settings.json");
+
         public static void OptimizationOn(bool lite = false)
         {
             Globals.ThisAddIn.Application.ScreenUpdating = false;
@@ -166,15 +169,12 @@ namespace MarsAddIn.HelperClasses
 
         public static Dictionary<string, bool> LoadRibbonItemSettings()
         {
-            var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
-
             var settingsDict = new Dictionary<string, bool>();
 
-            if (File.Exists(settingsLocation))
+            if (File.Exists(SettingsPath))
             {
-                var jsonSettings = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
+                var jsonSettings = JsonConvert.DeserializeObject<json>(File.ReadAllText(SettingsPath));
                 if (jsonSettings.RibbonSettings == null) return settingsDict;
-
 
                 foreach (var ribbonSetting in jsonSettings.RibbonSettings)
                     settingsDict[ribbonSetting.Key] = ribbonSetting.Value;
@@ -182,79 +182,44 @@ namespace MarsAddIn.HelperClasses
                 return settingsDict;
             }
 
-            CreateSettingsFile(settingsLocation);
+            CreateSettingsFile(SettingsPath);
 
             return settingsDict;
         }
 
         public static void SaveRibbonItemSettings(OfficeRibbon officeRibbon)
         {
-            var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
+            if (!File.Exists(SettingsPath))
+                CreateSettingsFile(SettingsPath);
 
-            if (File.Exists(settingsLocation))
-            {
-                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
-                json.RibbonSettings = new Dictionary<string, bool>();
+            var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(SettingsPath));
+            json.RibbonSettings = new Dictionary<string, bool>();
 
-                var ribbonTabs = officeRibbon.Tabs[1];
-                foreach (var tabGroup in ribbonTabs.Groups)
-                    foreach (var ribbonItem in tabGroup.Items)
-                        if (!new[] { "menuAddInSettings" }.Contains(ribbonItem.Name) && ribbonItem.Tag != null)
-                            try
-                            {
-                                json.RibbonSettings.Add(ribbonItem.Tag.ToString(), ribbonItem.Visible);
-                            }
-                            catch (Exception)
-                            {
-                                // ignored
-                            }
+            var ribbonTabs = officeRibbon.Tabs[1];
+            foreach (var tabGroup in ribbonTabs.Groups)
+                foreach (var ribbonItem in tabGroup.Items)
+                    if (!new[] { "menuAddInSettings" }.Contains(ribbonItem.Name) && ribbonItem.Tag != null)
+                        try
+                        {
+                            json.RibbonSettings.Add(ribbonItem.Tag.ToString(), ribbonItem.Visible);
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
 
-                File.WriteAllText(settingsLocation, JsonConvert.SerializeObject(json));
-            }
-            else
-            {
-                CreateSettingsFile(settingsLocation);
-                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
-                json.RibbonSettings = new Dictionary<string, bool>();
-
-                var ribbonTabs = officeRibbon.Tabs[1];
-                foreach (var tabGroup in ribbonTabs.Groups)
-                    foreach (var ribbonItem in tabGroup.Items)
-                        if (!new[] { "menuAddInSettings" }.Contains(ribbonItem.Name) && ribbonItem.Tag != null)
-                            try
-                            {
-                                json.RibbonSettings.Add(ribbonItem.Tag.ToString(), ribbonItem.Visible);
-                            }
-                            catch (Exception)
-                            {
-                                // ignored
-                            }
-
-                File.WriteAllText(settingsLocation, JsonConvert.SerializeObject(json));
-            }
-
+            File.WriteAllText(SettingsPath, JsonConvert.SerializeObject(json));
         }
 
         public static void SaveRibbonItemSettings(Dictionary<string, bool> dictItems)
         {
-            var settingsLocation = Environment.GetEnvironmentVariable("LOCALAPPDATA") + @"\MarsAddIn\settings.json";
+            if (!File.Exists(SettingsPath))
+                CreateSettingsFile(SettingsPath);
 
-            if (File.Exists(settingsLocation))
-            {
-                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
-                json.RibbonSettings = dictItems;
+            var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(SettingsPath));
+            json.RibbonSettings = dictItems;
 
-                File.WriteAllText(settingsLocation, JsonConvert.SerializeObject(json));
-            }
-            else
-            {
-                CreateSettingsFile(settingsLocation);
-                var json = JsonConvert.DeserializeObject<json>(File.ReadAllText(settingsLocation));
-                json.RibbonSettings = dictItems;
-
-                File.WriteAllText(settingsLocation, JsonConvert.SerializeObject(json));
-            }
-
+            File.WriteAllText(SettingsPath, JsonConvert.SerializeObject(json));
         }
 
         private static void CreateSettingsFile(string settingsLocation)
@@ -275,9 +240,9 @@ namespace MarsAddIn.HelperClasses
 
         public static void ReleaseObject(object o)
         {
+            if (o == null) return;
             try
             {
-                if (o == null) return;
                 var retryCount = 0;
                 while (Marshal.ReleaseComObject(o) > 0 && retryCount < 10)
                 {
@@ -288,11 +253,6 @@ namespace MarsAddIn.HelperClasses
             catch
             {
                 // ignored
-            }
-            finally
-            {
-                // ReSharper disable once RedundantAssignment
-                o = null;
             }
         }
     }
