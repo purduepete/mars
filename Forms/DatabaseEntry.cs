@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using MarsAddIn.HelperClasses;
 using json = MarsAddIn.HelperClasses.MarsSettings;
@@ -377,7 +378,36 @@ namespace MarsAddIn.Forms
             comboDatabase.Items.Clear();
             comboTable.Items.Clear();
 
-            var dbs = db.GetDatabases(db.GetDatabaseObjects(server));
+            var showedLoading = false;
+            var loadingTimer = new Timer { Interval = 500 };
+            loadingTimer.Tick += (s, ev) =>
+            {
+                loadingTimer.Stop();
+                showedLoading = true;
+                comboDatabase.Items.Clear();
+                comboDatabase.Items.Add("Loading...");
+                comboDatabase.SelectedIndex = 0;
+                comboDatabase.Enabled = false;
+                comboServer.Enabled = false;
+            };
+
+            var task = Task.Run(() => db.GetDatabases(db.GetDatabaseObjects(server)));
+            loadingTimer.Start();
+
+            while (!task.IsCompleted)
+                Application.DoEvents();
+
+            loadingTimer.Stop();
+            loadingTimer.Dispose();
+
+            if (showedLoading)
+            {
+                comboDatabase.Items.Clear();
+                comboServer.Enabled = true;
+                comboDatabase.Enabled = true;
+            }
+
+            var dbs = task.Result;
 
             if (dbs.Length > 0)
                 comboDatabase.Items.AddRange(dbs);
