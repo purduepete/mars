@@ -417,6 +417,7 @@ namespace MarsAddIn.Forms
 
         private void comboDatabaseChanged_Committed(object sender, EventArgs e)
         {
+            comboDatabase.DroppedDown = false;
             ToggleActionButton();
         }
 

@@ -418,7 +418,8 @@ namespace MarsAddIn.Forms
             ClearControls();
             QueryEditorManipulations();
 
-            PopulateTablesNames();
+            comboDatabase.DroppedDown = false;
+            BeginInvoke(new Action(() => PopulateTablesNames()));
         }
 
         private void PopulateTablesNames()
@@ -442,7 +443,8 @@ namespace MarsAddIn.Forms
             ClearControls();
             QueryEditorManipulations();
 
-            UpdateDbColumnList();
+            comboTable.DroppedDown = false;
+            BeginInvoke(new Action(() => UpdateDbColumnList()));
         }
 
 

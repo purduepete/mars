@@ -39,7 +39,7 @@
     <PublishUrl>C:\Users\JimBrown\OneDrive\Files\ExcelAddIn\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.93</ApplicationVersion>
+    <ApplicationVersion>1.0.0.94</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
