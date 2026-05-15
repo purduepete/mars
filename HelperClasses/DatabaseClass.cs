@@ -57,7 +57,7 @@ namespace MarsAddIn.HelperClasses
                     $"Server=tcp:{serverName},1433; Initial Catalog={databaseName}; Persist Security Info=False; MultipleActiveResultSets=False; Encrypt=True; TrustServerCertificate=False; Connection Timeout=30; Authentication=Active Directory Interactive;";
             }
             else
-                connectionString = $"Data Source={serverName};Initial Catalog={databaseName};Integrated Security=SSPI;";
+                connectionString = $"Data Source={serverName};Initial Catalog={databaseName};Integrated Security=SSPI;Encrypt=True;TrustServerCertificate=True;";
 
             var cnn = new SqlConnection(connectionString);
             try
