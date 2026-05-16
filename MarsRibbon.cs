@@ -347,21 +347,8 @@ namespace MarsAddIn
 
         private void addinSettingBtn_Click(object sender, RibbonControlEventArgs e)
         {
-            var dirLocation = Path.GetDirectoryName(helper.SettingsPath);
-            if (!Directory.Exists(dirLocation))
-                Directory.CreateDirectory(dirLocation);
-
-            if (!File.Exists(helper.SettingsPath))
-            {
-                var marsetting = new json();
-                using (var file = File.CreateText(helper.SettingsPath))
-                {
-                    var serializer = new JsonSerializer();
-                    serializer.Serialize(file, marsetting);
-                }
-            }
-
-            Process.Start(helper.SettingsPath);
+            var settingsForm = new SettingsForm();
+            settingsForm.ShowDialog();
         }
 
         private void rangeGroup_DialogLauncherClick(object sender, RibbonControlEventArgs e)

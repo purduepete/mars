@@ -39,7 +39,7 @@
     <PublishUrl>C:\Users\JimBrown\OneDrive\Files\ExcelAddIn\</PublishUrl>
     <InstallUrl />
     <TargetCulture>en</TargetCulture>
-    <ApplicationVersion>1.0.0.96</ApplicationVersion>
+    <ApplicationVersion>1.0.0.97</ApplicationVersion>
     <AutoIncrementApplicationRevision>true</AutoIncrementApplicationRevision>
     <UpdateEnabled>true</UpdateEnabled>
     <UpdateInterval>1</UpdateInterval>
@@ -211,6 +211,9 @@
     </Compile>
     <Compile Include="Forms\QueryEdit.Designer.cs">
       <DependentUpon>QueryEdit.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\SettingsForm.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\TableCreate.cs">
       <SubType>Form</SubType>
